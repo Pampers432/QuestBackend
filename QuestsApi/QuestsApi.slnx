@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="../Application/Application.csproj" Id="52d9d71d-f84d-4f4c-a875-7ba621f1e763" />
+  <Project Path="../Data/Data.csproj" Id="7a76b784-bd7c-400e-96bc-fa8661b3510b" />
+  <Project Path="../Domain/Domain.csproj" Id="2d580315-87be-4e6c-8494-d8dcded69c96" />
+  <Project Path="QuestsApi.csproj" />
+</Solution>
