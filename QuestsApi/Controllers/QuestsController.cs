@@ -71,19 +71,35 @@ namespace QuestsApi.Controllers
         {
             var quest = new Quest
             {
-                Id = Guid.NewGuid(),
+                //Id = Guid.NewGuid(),
                 Title = request.Title,
                 Description = request.Description,
                 Subject = request.Subject,
                 Difficulty = request.Difficulty,
                 Status = request.Status,
-                AuthorId = Guid.Parse("0ef0ea1a-7e15-402b-894f-5d7224607447"),
+                AuthorId = Guid.Parse("0EF0EA1A-7E15-402B-894F-5D7224607447"),
                 QuestRooms = request.Rooms.Select(r => new QuestRoom
                 {
-                    Id = Guid.NewGuid(),
+                    //Id = Guid.NewGuid(),
                     RoomTemplateId = r.RoomTemplateId,
                     Title = r.Title,
-                    OrderIndex = r.OrderIndex                                       
+                    OrderIndex = r.OrderIndex,
+                    Questions = r.Questions.Select(q => new Question
+                    {
+                        //Id = Guid.NewGuid(),
+                        Text = q.Text,
+                        Type = q.Type,
+                        Points = q.Points,
+                        Hint = q.Hint,
+                        OrderIndex = q.OrderIndex,
+                        AnswerOptions = q.AnswerOptions.Select(a => new AnswerOption
+                        {
+                            //Id = Guid.NewGuid(),
+                            Text = a.Text,
+                            IsCorrect = a.IsCorrect,
+                            OrderIndex = a.OrderIndex
+                        }).ToList()
+                    }).ToList()
                 }).ToList()
             };
 
