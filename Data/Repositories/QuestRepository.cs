@@ -1,4 +1,5 @@
 ﻿using Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 using QuestsApi.Data;
 
 namespace QuestsApi
@@ -24,6 +25,19 @@ namespace QuestsApi
             await _context.RoomTemplates.AddAsync(new RoomTemplate { Name = temlpate.Name, PreviewImage = temlpate.PreviewImage, SceneData = temlpate.SceneData});
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<List<RoomTemplate>> GetAllTemplatesAsync()
+        {     
+            return await _context.RoomTemplates.ToListAsync();
+        }
+
+        public async Task<string> CreateQuestAsync(Quest quest)
+        {
+            await _context.Quests.AddAsync(quest);
+            await _context.SaveChangesAsync();
+
+            return "Успех";
         }
     }
 }

@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using QuestsApi.Data;
 using Application.Services;
+using Data.Repositories;
 
 namespace QuestsApi
 {
@@ -16,6 +17,8 @@ namespace QuestsApi
             builder.Services.AddControllers();
             builder.Services.AddScoped<QuestRepository>();
             builder.Services.AddScoped<QuestService>();
+            builder.Services.AddScoped<AuthRepository>();
+            builder.Services.AddScoped<AuthService>();
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
             builder.Services.AddDbContext<QuestPlatformContext>(options =>

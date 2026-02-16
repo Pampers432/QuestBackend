@@ -1,14 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Application.DTO
+﻿namespace QuestsApi.DTO
 {
     public record RoomTemplateDto(
-            Guid? Id,
-            string Name,
-            IFormFile PreviewImage,
-            string SceneData
-        );
+        Guid? Id,
+        string Name,
+        string PreviewImageUrl,
+        string SceneData
+    );
 }

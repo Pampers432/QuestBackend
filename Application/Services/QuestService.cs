@@ -17,9 +17,21 @@ namespace Application.Services
             _questRepository = questRepository;
         }
 
+        public async Task<string> CreateQuestAsync(Quest quest)
+        {
+            return await _questRepository.CreateQuestAsync(quest);
+        }
+
         public async Task<bool> SaveTemplateAsync(RoomTemplate template)
         {
             var res = await _questRepository.SaveTemplateAsync(template);
+
+            return res;
+        }
+
+        public async Task<List<RoomTemplate>> GetAllTemplatesAsync()
+        {
+            var res = await _questRepository.GetAllTemplatesAsync();
 
             return res;
         }
