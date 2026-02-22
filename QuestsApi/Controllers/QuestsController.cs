@@ -65,6 +65,12 @@ namespace QuestsApi.Controllers
             }
         }
 
+        [HttpGet("GetAllQuests")]
+        public async Task<IActionResult> GetAllQuests()
+        {
+            return Ok(await _questService.GetAllQuestsAsync());
+        }
+
 
         [HttpPost("CreateQuest")]
         public async Task<IActionResult> PostQuest([FromBody] CreateQuestRequest request)

@@ -29,8 +29,22 @@ namespace QuestsApi
 
         public async Task<List<RoomTemplate>> GetAllTemplatesAsync()
         {     
-            return await _context.RoomTemplates.ToListAsync();
+            return await _context.RoomTemplates.AsNoTracking().ToListAsync();
         }
+
+        public async Task<List<Quest>> GetAllQuestsAsync()
+        {
+            return await _context.Quests
+                .AsNoTracking()
+                .Include(q => q.Author)
+                .Include(q => q.QuestRooms)
+                    .ThenInclude(qr => qr.RoomTemplate)
+                .Include(q => q.QuestRooms)
+                    .ThenInclude(qr => qr.Questions)
+                        .ThenInclude(qe => qe.AnswerOptions)
+                .ToListAsync();
+        }
+
 
         public async Task<string> CreateQuestAsync(Quest quest)
         {
