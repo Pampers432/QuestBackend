@@ -19,6 +19,7 @@ namespace QuestsApi
             builder.Services.AddScoped<QuestService>();
             builder.Services.AddScoped<AuthRepository>();
             builder.Services.AddScoped<AuthService>();
+            builder.Services.AddScoped<QuestSessionService>();
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
             builder.Services.AddDbContext<QuestPlatformContext>(options =>

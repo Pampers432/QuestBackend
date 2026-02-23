@@ -13,13 +13,6 @@ namespace QuestsApi
             _context = context;
         }
 
-        //public async string SaveImage(string img)
-        //{
-        //    await _context.RoomTemplates.AddAsync(new RoomTemplate { Name = "test room", PreviewImage = img, SceneData = "test data" });
-        //    await _context.SaveChangesAsync();
-        //    return "Успех";
-        //}
-
         public async Task<bool> SaveTemplateAsync(RoomTemplate temlpate)
         {
             await _context.RoomTemplates.AddAsync(new RoomTemplate { Name = temlpate.Name, PreviewImage = temlpate.PreviewImage, SceneData = temlpate.SceneData});
@@ -53,5 +46,20 @@ namespace QuestsApi
 
             return "Успех";
         }
+
+        public async Task<QuestSession> CreateSessionAsync(QuestSession session)
+        {
+            await _context.QuestSessions.AddAsync(session);
+            await _context.SaveChangesAsync();            
+
+            return session;
+        }
+
+        //public async Task<QuestSession> GetSessionAsync(Guid id)
+        //{
+        //    return await _context.QuestSessions
+        //        .Include(s => s.Quest)
+        //        .FirstOrDefaultAsync(s => s.Id == id);
+        //}
     }
 }
