@@ -37,5 +37,28 @@ namespace QuestsApi.Controllers
 
             return Ok(newSession);
         }
+
+        // QuestSessionsController.cs
+
+        [HttpPost("StartAttempt")]
+        public async Task<IActionResult> StartAttempt([FromBody] StartAttemptDto dto)
+        {
+            var result = await _sessionService.StartAttemptAsync(dto);
+            return Ok(result);
+        }
+
+        [HttpPost("FinishAttempt/{attemptId}")]
+        public async Task<IActionResult> FinishAttempt(Guid attemptId)
+        {
+            await _sessionService.FinishAttemptAsync(attemptId);
+            return Ok(new { message = "Attempt finished" });
+        }
+
+        [HttpPost("SaveAnswer")]
+        public async Task<IActionResult> SaveAnswer([FromBody] UserAnswerDto dto)
+        {
+            await _sessionService.SaveAnswerAsync(dto);
+            return Ok();
+        }
     }
 }

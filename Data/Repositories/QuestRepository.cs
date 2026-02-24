@@ -61,5 +61,31 @@ namespace QuestsApi
         //        .Include(s => s.Quest)
         //        .FirstOrDefaultAsync(s => s.Id == id);
         //}
+
+        public async Task AddAttemptAsync(Attempt attempt)
+        {
+            await _context.Attempts.AddAsync(attempt);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<Attempt?> GetAttemptWithAnswersAsync(Guid attemptId)
+        {
+            return await _context.Attempts
+                .Include(a => a.UserAnswers)
+                .ThenInclude(ua => ua.Question)
+                .FirstOrDefaultAsync(a => a.Id == attemptId);
+        }
+
+        public async Task UpdateAttemptAsync(Attempt attempt)
+        {
+            _context.Attempts.Update(attempt);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task AddUserAnswerAsync(UserAnswer answer)
+        {
+            await _context.UserAnswers.AddAsync(answer);
+            await _context.SaveChangesAsync();
+        }
     }
 }
