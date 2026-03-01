@@ -38,8 +38,6 @@ namespace QuestsApi.Controllers
             return Ok(newSession);
         }
 
-        // QuestSessionsController.cs
-
         [HttpPost("StartAttempt")]
         public async Task<IActionResult> StartAttempt([FromBody] StartAttemptDto dto)
         {

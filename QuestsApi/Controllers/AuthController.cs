@@ -24,5 +24,13 @@ namespace QuestsApi.Controllers
 
             return Ok(new { message = res });
         }
+
+        [HttpPost("Authorize")]
+        public async Task<IActionResult> Authorize(string Username, string Password)
+        {
+            var res = await _authService.CreateUserAsync(Username, Password);
+
+            return Ok(new { message = res });
+        }
     }
 }
