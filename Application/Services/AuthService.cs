@@ -1,4 +1,5 @@
-﻿using Data.Repositories;
+﻿using Application.DTO;
+using Data.Repositories;
 using Domain.Entities;
 using System.Security.Cryptography;
 
@@ -13,10 +14,10 @@ namespace Application.Services
             _repository = repository;
         }
 
-        public async Task<(bool Success, string Message, User? User)> RegisterAsync(string username, string password)
+        public async Task<(bool Success, string Message, User? User)> RegisterAsync(RegisterRequest request)
         {
-            var normalizedUsername = username.Trim();
-            if (string.IsNullOrWhiteSpace(normalizedUsername) || string.IsNullOrWhiteSpace(password))
+            var normalizedUsername = request.Username.Trim();
+            if (string.IsNullOrWhiteSpace(normalizedUsername) || string.IsNullOrWhiteSpace(request.Password))
             {
                 return (false, "Логин и пароль обязательны", null);
             }
@@ -30,9 +31,9 @@ namespace Application.Services
             var user = new User
             {
                 Username = normalizedUsername,
-                PasswordHash = HashPassword(password),
+                PasswordHash = HashPassword(request.Password),
                 IsBlocked = false,
-                Role = "student"
+                Role = request.Role
             };
 
             var createdUser = await _repository.CreateUserAsync(user);
