@@ -1,9 +1,7 @@
-﻿using Data.Repositories;
+﻿using Application.DTO;
+using Data.Repositories;
 using Domain.Entities;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Security.Cryptography;
 
 namespace Application.Services
 {
@@ -16,10 +14,74 @@ namespace Application.Services
             _repository = repository;
         }
 
-        public async Task<string> CreateUserAsync(string Username, string Password)
+        public async Task<(bool Success, string Message, User? User)> RegisterAsync(RegisterRequest request)
         {
-            var user = new User { Username = Username, PasswordHash = Password, IsBlocked = false, Role = "student" };
-            return await _repository.CreateUserAsync(user);
+            var normalizedUsername = request.Username.Trim();
+            if (string.IsNullOrWhiteSpace(normalizedUsername) || string.IsNullOrWhiteSpace(request.Password))
+            {
+                return (false, "Логин и пароль обязательны", null);
+            }
+
+            var existingUser = await _repository.GetByUsernameAsync(normalizedUsername);
+            if (existingUser is not null)
+            {
+                return (false, "Пользователь уже существует", null);
+            }
+
+            var user = new User
+            {
+                Username = normalizedUsername,
+                PasswordHash = HashPassword(request.Password),
+                IsBlocked = false,
+                Role = request.Role
+            };
+
+            var createdUser = await _repository.CreateUserAsync(user);
+            return (true, "Успех", createdUser);
+        }
+
+        public async Task<(bool Success, string Message, User? User)> LoginAsync(string username, string password)
+        {
+            var normalizedUsername = username.Trim();
+            var user = await _repository.GetByUsernameAsync(normalizedUsername);
+            if (user is null)
+            {
+                return (false, "Неверный логин или пароль", null);
+            }
+
+            if (user.IsBlocked)
+            {
+                return (false, "Пользователь заблокирован", null);
+            }
+
+            if (!VerifyPassword(password, user.PasswordHash))
+            {
+                return (false, "Неверный логин или пароль", null);
+            }
+
+            return (true, "Успех", user);
+        }
+
+        private static string HashPassword(string password)
+        {
+            var salt = RandomNumberGenerator.GetBytes(16);
+            var hash = Rfc2898DeriveBytes.Pbkdf2(password, salt, 100_000, HashAlgorithmName.SHA256, 32);
+            return $"{Convert.ToBase64String(salt)}.{Convert.ToBase64String(hash)}";
+        }
+
+        private static bool VerifyPassword(string password, string storedHash)
+        {
+            var parts = storedHash.Split('.');
+            if (parts.Length != 2)
+            {
+                return false;
+            }
+
+            var salt = Convert.FromBase64String(parts[0]);
+            var expectedHash = Convert.FromBase64String(parts[1]);
+            var actualHash = Rfc2898DeriveBytes.Pbkdf2(password, salt, 100_000, HashAlgorithmName.SHA256, 32);
+
+            return CryptographicOperations.FixedTimeEquals(actualHash, expectedHash);
         }
     }
 }
