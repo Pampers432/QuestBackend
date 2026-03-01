@@ -25,7 +25,7 @@ namespace QuestsApi.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-            var result = await _authService.RegisterAsync(request.Username, request.Password);
+            var result = await _authService.RegisterAsync(request);
             if (!result.Success || result.User is null)
             {
                 return BadRequest(new { message = result.Message });
