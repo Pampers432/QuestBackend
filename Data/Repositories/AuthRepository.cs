@@ -1,8 +1,6 @@
 ﻿using Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 using QuestsApi.Data;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Data.Repositories
 {
@@ -15,12 +13,17 @@ namespace Data.Repositories
             _context = context;
         }
 
-        public async Task<string> CreateUserAsync(User user)
+        public async Task<User?> GetByUsernameAsync(string username)
+        {
+            return await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+        }
+
+        public async Task<User> CreateUserAsync(User user)
         {
             await _context.Users.AddAsync(user);
             await _context.SaveChangesAsync();
 
-            return "Успех";
+            return user;
         }
     }
 }
