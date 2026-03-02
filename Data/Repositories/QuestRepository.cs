@@ -55,13 +55,7 @@ namespace QuestsApi
             return session;
         }
 
-        //public async Task<QuestSession> GetSessionAsync(Guid id)
-        //{
-        //    return await _context.QuestSessions
-        //        .Include(s => s.Quest)
-        //        .FirstOrDefaultAsync(s => s.Id == id);
-        //}
-        public async Task<QuestSession?> GetSessionAsync(Guid id)
+        public async Task<QuestSession?> GetByAccessCodeAsync(string accessCode)
         {
             return await _context.QuestSessions
                 .AsNoTracking()
@@ -79,7 +73,7 @@ namespace QuestsApi
                     .ThenInclude(a => a.User)
                 .Include(s => s.Attempts)
                     .ThenInclude(a => a.UserAnswers)
-                .FirstOrDefaultAsync(s => s.Id == id);
+                .FirstOrDefaultAsync(s => s.AccessCode == accessCode);
         }
 
         public async Task AddAttemptAsync(Attempt attempt)

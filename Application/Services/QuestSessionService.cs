@@ -21,9 +21,9 @@ namespace Application.Services
             return session;
         }
 
-        public async Task<QuestSessionDetailsDto?> GetSessionAsync(Guid id)
+        public async Task<QuestSessionDetailsDto?> GetByAccessCodeAsync(string accessCode)
         {
-            var session = await _questRepository.GetSessionAsync(id);
+            var session = await _questRepository.GetByAccessCodeAsync(accessCode);
 
             if (session == null)
             {

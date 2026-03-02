@@ -38,11 +38,10 @@ namespace QuestsApi.Controllers
             return Ok(newSession);
         }
 
-
-        [HttpGet("GetSession/{id:guid}")]
-        public async Task<IActionResult> GetSession(Guid id)
+        [HttpGet("GetByAccessCode/{accessCode}")]
+        public async Task<IActionResult> GetByAccessCode([FromRoute] string accessCode)
         {
-            var session = await _sessionService.GetSessionAsync(id);
+            var session = await _sessionService.GetByAccessCodeAsync(accessCode);
 
             if (session == null)
             {
@@ -52,7 +51,23 @@ namespace QuestsApi.Controllers
             return Ok(session);
         }
 
-        // QuestSessionsController.cs
+        [HttpGet("GetByAccessCode")]
+        public async Task<IActionResult> GetByAccessCodeQuery([FromQuery] string accessCode)
+        {
+            if (string.IsNullOrWhiteSpace(accessCode))
+            {
+                return BadRequest("accessCode is required");
+            }
+
+            var session = await _sessionService.GetByAccessCodeAsync(accessCode);
+
+            if (session == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(session);
+        }
 
         [HttpPost("StartAttempt")]
         public async Task<IActionResult> StartAttempt([FromBody] StartAttemptDto dto)
