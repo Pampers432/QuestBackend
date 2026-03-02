@@ -30,12 +30,26 @@ namespace QuestsApi.Controllers
                 AccessCode = dto.AccessCode,
                 StartsAt = dto.StartsAt,
                 EndsAt = dto.EndsAt,
-                IsActive = true
+                IsActive = dto.EndsAt == null || dto.EndsAt > DateTime.UtcNow
             };
 
             var newSession = await _sessionService.CreateSessionAsync(session);
 
             return Ok(newSession);
+        }
+
+
+        [HttpGet("GetSession/{id:guid}")]
+        public async Task<IActionResult> GetSession(Guid id)
+        {
+            var session = await _sessionService.GetSessionAsync(id);
+
+            if (session == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(session);
         }
 
         // QuestSessionsController.cs
