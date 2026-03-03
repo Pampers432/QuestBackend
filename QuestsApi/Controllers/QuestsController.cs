@@ -3,7 +3,6 @@ using Application.Services;
 using Domain.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using QuestsApi.DTO;
 
 namespace QuestsApi.Controllers
@@ -25,11 +24,65 @@ namespace QuestsApi.Controllers
             return Ok(new { message = "Зоны", count = zones.Count, zones });
         }
 
+        [HttpGet]
         [HttpGet("GetAllTemplates")]
         public async Task<IActionResult> GetAllTemplates()
         {
             var templates = await _questService.GetAllTemplatesAsync();
             return Ok(templates);
+        }
+
+        [HttpGet("{id:guid}")]
+        public async Task<IActionResult> GetTemplateById(Guid id)
+        {
+            var template = await _questService.GetTemplateByIdAsync(id);
+            if (template == null)
+                return NotFound();
+
+            return Ok(template);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateTemplate([FromBody] RoomTemplateUpsertDto dto)
+        {
+            var template = new RoomTemplate
+            {
+                Id = Guid.NewGuid(),
+                Name = dto.Name,
+                PreviewImage = dto.PreviewImageUrl,
+                SceneData = dto.SceneData ?? string.Empty
+            };
+
+            var created = await _questService.CreateTemplateAsync(template);
+            return Ok(created);
+        }
+
+        [HttpPut("{id:guid}")]
+        public async Task<IActionResult> UpdateTemplate(Guid id, [FromBody] RoomTemplateUpsertDto dto)
+        {
+            var template = new RoomTemplate
+            {
+                Id = id,
+                Name = dto.Name,
+                PreviewImage = dto.PreviewImageUrl,
+                SceneData = dto.SceneData ?? string.Empty
+            };
+
+            var updated = await _questService.UpdateTemplateAsync(template);
+            if (updated == null)
+                return NotFound();
+
+            return Ok(updated);
+        }
+
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> DeleteTemplate(Guid id)
+        {
+            var deleted = await _questService.DeleteTemplateAsync(id);
+            if (!deleted)
+                return NotFound();
+
+            return Ok();
         }
 
         [HttpPost("PostTemplate")]
@@ -77,7 +130,6 @@ namespace QuestsApi.Controllers
         {
             var quest = new Quest
             {
-                //Id = Guid.NewGuid(),
                 Title = request.Title,
                 Description = request.Description,
                 Subject = request.Subject,
@@ -86,13 +138,11 @@ namespace QuestsApi.Controllers
                 AuthorId = Guid.Parse("0EF0EA1A-7E15-402B-894F-5D7224607447"),
                 QuestRooms = request.Rooms.Select(r => new QuestRoom
                 {
-                    //Id = Guid.NewGuid(),
                     RoomTemplateId = r.RoomTemplateId,
                     Title = r.Title,
                     OrderIndex = r.OrderIndex,
                     Questions = r.Questions.Select(q => new Question
                     {
-                        //Id = Guid.NewGuid(),
                         Text = q.Text,
                         Type = q.Type,
                         Points = q.Points,
@@ -100,7 +150,6 @@ namespace QuestsApi.Controllers
                         OrderIndex = q.OrderIndex,
                         AnswerOptions = q.AnswerOptions.Select(a => new AnswerOption
                         {
-                            //Id = Guid.NewGuid(),
                             Text = a.Text,
                             IsCorrect = a.IsCorrect,
                             OrderIndex = a.OrderIndex
@@ -111,7 +160,7 @@ namespace QuestsApi.Controllers
 
             var res = await _questService.CreateQuestAsync(quest);
 
-            return Ok( new { message = res, quest.Id });
+            return Ok(new { message = res, quest.Id });
         }
 
         private async Task<string> SaveImage(IFormFile image)

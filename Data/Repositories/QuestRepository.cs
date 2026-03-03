@@ -25,6 +25,47 @@ namespace QuestsApi
             return await _context.RoomTemplates.AsNoTracking().ToListAsync();
         }
 
+
+        public async Task<RoomTemplate?> GetTemplateByIdAsync(Guid id)
+        {
+            return await _context.RoomTemplates.AsNoTracking().FirstOrDefaultAsync(t => t.Id == id);
+        }
+
+        public async Task<RoomTemplate> CreateTemplateAsync(RoomTemplate template)
+        {
+            await _context.RoomTemplates.AddAsync(template);
+            await _context.SaveChangesAsync();
+            return template;
+        }
+
+        public async Task<RoomTemplate?> UpdateTemplateAsync(RoomTemplate template)
+        {
+            var existing = await _context.RoomTemplates.FirstOrDefaultAsync(t => t.Id == template.Id);
+            if (existing == null)
+                return null;
+
+            existing.Name = template.Name;
+            existing.PreviewImage = template.PreviewImage;
+            if (!string.IsNullOrWhiteSpace(template.SceneData))
+            {
+                existing.SceneData = template.SceneData;
+            }
+
+            await _context.SaveChangesAsync();
+            return existing;
+        }
+
+        public async Task<bool> DeleteTemplateAsync(Guid id)
+        {
+            var template = await _context.RoomTemplates.FirstOrDefaultAsync(t => t.Id == id);
+            if (template == null)
+                return false;
+
+            _context.RoomTemplates.Remove(template);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         public async Task<List<Quest>> GetAllQuestsAsync()
         {
             return await _context.Quests
