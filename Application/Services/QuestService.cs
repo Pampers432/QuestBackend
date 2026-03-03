@@ -83,6 +83,27 @@ namespace Application.Services
             return res;
         }
 
+
+        public async Task<RoomTemplate?> GetTemplateByIdAsync(Guid id)
+        {
+            return await _questRepository.GetTemplateByIdAsync(id);
+        }
+
+        public async Task<RoomTemplate> CreateTemplateAsync(RoomTemplate template)
+        {
+            return await _questRepository.CreateTemplateAsync(template);
+        }
+
+        public async Task<RoomTemplate?> UpdateTemplateAsync(RoomTemplate template)
+        {
+            return await _questRepository.UpdateTemplateAsync(template);
+        }
+
+        public async Task<bool> DeleteTemplateAsync(Guid id)
+        {
+            return await _questRepository.DeleteTemplateAsync(id);
+        }
+
         public async Task<List<RoomTemplate>> GetAllTemplatesAsync()
         {
             var res = await _questRepository.GetAllTemplatesAsync();
