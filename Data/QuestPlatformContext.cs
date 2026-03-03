@@ -120,7 +120,6 @@ public partial class QuestPlatformContext : DbContext
         modelBuilder.Entity<RoomTemplate>(entity =>
         {
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
-            entity.Property(e => e.Description).HasMaxLength(1000);
             entity.Property(e => e.Name).HasMaxLength(100);
             entity.Property(e => e.PreviewImage).HasMaxLength(255);
         });

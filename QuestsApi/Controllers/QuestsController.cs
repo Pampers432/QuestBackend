@@ -49,8 +49,8 @@ namespace QuestsApi.Controllers
             {
                 Id = Guid.NewGuid(),
                 Name = dto.Name,
-                Description = dto.Description,
-                PreviewImageUrl = dto.PreviewImageUrl
+                PreviewImage = dto.PreviewImageUrl,
+                SceneData = dto.SceneData ?? string.Empty
             };
 
             var created = await _questService.CreateTemplateAsync(template);
@@ -64,8 +64,8 @@ namespace QuestsApi.Controllers
             {
                 Id = id,
                 Name = dto.Name,
-                Description = dto.Description,
-                PreviewImageUrl = dto.PreviewImageUrl
+                PreviewImage = dto.PreviewImageUrl,
+                SceneData = dto.SceneData ?? string.Empty
             };
 
             var updated = await _questService.UpdateTemplateAsync(template);

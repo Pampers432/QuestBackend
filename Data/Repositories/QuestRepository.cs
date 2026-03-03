@@ -45,8 +45,11 @@ namespace QuestsApi
                 return null;
 
             existing.Name = template.Name;
-            existing.Description = template.Description;
-            existing.PreviewImageUrl = template.PreviewImageUrl;
+            existing.PreviewImage = template.PreviewImage;
+            if (!string.IsNullOrWhiteSpace(template.SceneData))
+            {
+                existing.SceneData = template.SceneData;
+            }
 
             await _context.SaveChangesAsync();
             return existing;
