@@ -58,21 +58,46 @@ namespace QuestsApi.Controllers
         }
 
         [HttpPut("{id:guid}")]
-        public async Task<IActionResult> UpdateTemplate(Guid id, [FromBody] RoomTemplateUpsertDto dto)
+        public async Task<IActionResult> UpdateTemplate(Guid id, [FromForm] CreateRoomTemplateDto dto)
         {
-            var template = new RoomTemplate
+            if (dto == null)
+                return BadRequest("Неполные данные");
+
+            try
             {
-                Id = id,
-                Name = dto.Name,
-                PreviewImage = dto.PreviewImageUrl,
-                SceneData = dto.SceneData ?? string.Empty
-            };
+                // Получаем существующий шаблон
+                var existingTemplate = await _questService.GetTemplateByIdAsync(id);
+                if (existingTemplate == null)
+                    return NotFound($"Шаблон с ID {id} не найден");
 
-            var updated = await _questService.UpdateTemplateAsync(template);
-            if (updated == null)
-                return NotFound();
+                // Обновляем название
+                existingTemplate.Name = dto.Name;
+        
+                // Обновляем зоны
+                existingTemplate.SceneData = dto.SceneData;
 
-            return Ok(updated);
+                // Если загружено новое изображение
+                if (dto.PreviewImage != null)
+                {
+                    // Сохраняем новое изображение (используем существующий метод SaveImage)
+                    var relativePath = await SaveImage(dto.PreviewImage);
+                    existingTemplate.PreviewImage = relativePath;
+            
+                    // Здесь можно добавить удаление старого изображения, если нужно
+                    // (но это опционально, т.к. SaveImage уже генерирует новый GUID)
+                }
+
+                // Сохраняем изменения в базу данных
+                var updated = await _questService.UpdateTemplateAsync(existingTemplate);
+                if (updated == null)
+                    return NotFound();
+
+                return Ok(updated);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
 
         [HttpDelete("{id:guid}")]
