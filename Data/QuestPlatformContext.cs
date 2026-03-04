@@ -16,6 +16,8 @@ public partial class QuestPlatformContext : DbContext
 
     public virtual DbSet<Attempt> Attempts { get; set; }
 
+    public virtual DbSet<Category> Categories { get; set; }
+
     public virtual DbSet<Quest> Quests { get; set; }
 
     public virtual DbSet<QuestRoom> QuestRooms { get; set; }
@@ -57,6 +59,13 @@ public partial class QuestPlatformContext : DbContext
                 .HasConstraintName("FK_Attempts_Users");
         });
 
+        modelBuilder.Entity<Category>(entity =>
+        {
+            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Name).HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(500);
+        });
+
         modelBuilder.Entity<Quest>(entity =>
         {
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
@@ -69,6 +78,11 @@ public partial class QuestPlatformContext : DbContext
                 .HasForeignKey(d => d.AuthorId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Quests_Users");
+
+            entity.HasOne(d => d.Category).WithMany(p => p.Quests)
+                .HasForeignKey(d => d.CategoryId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("FK_Quests_Categories");
         });
 
         modelBuilder.Entity<QuestRoom>(entity =>

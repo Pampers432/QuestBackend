@@ -17,9 +17,13 @@ public partial class Quest
 
     public Guid AuthorId { get; set; }
 
+    public Guid? CategoryId { get; set; }
+
     public string Status { get; set; } = null!;
 
     public virtual User Author { get; set; } = null!;
+
+    public virtual Category? Category { get; set; }
 
     public virtual ICollection<QuestRoom> QuestRooms { get; set; } = new List<QuestRoom>();
 

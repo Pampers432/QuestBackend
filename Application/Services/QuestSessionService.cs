@@ -56,6 +56,12 @@ namespace Application.Services
                         Role: session.Quest.Author.Role,
                         IsBlocked: session.Quest.Author.IsBlocked
                     ),
+                    CategoryId: session.Quest.CategoryId,
+                    Category: session.Quest.Category != null ? new CategoryDto(
+                        Id: session.Quest.Category.Id,
+                        Name: session.Quest.Category.Name,
+                        Description: session.Quest.Category.Description
+                    ) : null,
                     QuestRooms: session.Quest.QuestRooms
                         .OrderBy(r => r.OrderIndex)
                         .Select(r => new QuestRoomDto(
@@ -167,6 +173,96 @@ namespace Application.Services
             };
 
             await _questRepository.AddUserAnswerAsync(answer);
+        }
+
+        public async Task<SessionDashboardDto?> GetSessionDashboardAsync(Guid sessionId)
+        {
+            var session = await _questRepository.GetSessionByIdAsync(sessionId);
+            if (session == null)
+                return null;
+
+            var attempts = session.Attempts
+                .OrderByDescending(a => a.StartedAt)
+                .Select(a => new AttemptSummaryDto(
+                    AttemptId: a.Id,
+                    UserId: a.UserId,
+                    Username: a.User.Username,
+                    Status: a.Status,
+                    Score: a.Score,
+                    MaxScore: a.MaxScore,
+                    StartedAt: a.StartedAt,
+                    FinishedAt: a.FinishedAt
+                ))
+                .ToList();
+
+            return new SessionDashboardDto(
+                SessionId: session.Id,
+                AccessCode: session.AccessCode,
+                QuestTitle: session.Quest.Title,
+                StartsAt: session.StartsAt,
+                EndsAt: session.EndsAt,
+                IsActive: session.IsActive && (session.EndsAt == null || session.EndsAt > DateTime.UtcNow),
+                TotalAttempts: session.Attempts.Count,
+                CompletedAttempts: session.Attempts.Count(a => a.Status == "completed"),
+                Attempts: attempts
+            );
+        }
+
+        public async Task<byte[]?> ExportSessionReportAsync(Guid sessionId, string format)
+        {
+            var session = await _questRepository.GetSessionByIdWithDetailsAsync(sessionId);
+            if (session == null)
+                return null;
+
+            if (format.ToLower() == "csv")
+            {
+                return GenerateCsvReport(session);
+            }
+            else
+            {
+                return GenerateJsonReport(session);
+            }
+        }
+
+        private byte[] GenerateCsvReport(QuestSession session)
+        {
+            using var ms = new MemoryStream();
+            using var writer = new StreamWriter(ms, System.Text.Encoding.UTF8);
+
+            writer.WriteLine("Username,Status,Score,MaxScore,StartedAt,FinishedAt");
+            
+            foreach (var attempt in session.Attempts.OrderByDescending(a => a.StartedAt))
+            {
+                writer.WriteLine($"{attempt.User.Username},{attempt.Status},{attempt.Score},{attempt.MaxScore},{attempt.StartedAt:yyyy-MM-dd HH:mm:ss},{attempt.FinishedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? ""}");
+            }
+
+            writer.Flush();
+            return ms.ToArray();
+        }
+
+        private byte[] GenerateJsonReport(QuestSession session)
+        {
+            var report = new
+            {
+                SessionId = session.Id,
+                AccessCode = session.AccessCode,
+                QuestTitle = session.Quest.Title,
+                StartsAt = session.StartsAt,
+                EndsAt = session.EndsAt,
+                Attempts = session.Attempts.Select(a => new
+                {
+                    a.Id,
+                    Username = a.User.Username,
+                    a.Status,
+                    a.Score,
+                    a.MaxScore,
+                    a.StartedAt,
+                    a.FinishedAt
+                })
+            };
+
+            var json = System.Text.Json.JsonSerializer.Serialize(report, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+            return System.Text.Encoding.UTF8.GetBytes(json);
         }
     }
 }

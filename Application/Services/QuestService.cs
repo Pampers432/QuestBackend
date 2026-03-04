@@ -22,10 +22,26 @@ namespace Application.Services
             return await _questRepository.CreateQuestAsync(quest);
         }
 
+        public async Task<List<QuestDto>> GetLatestQuestsAsync(int count = 5)
+        {
+            var quests = await _questRepository.GetLatestQuestsAsync(count);
+            return MapQuestsToDto(quests);
+        }
+
+        public async Task<List<QuestDto>> SearchQuestsAsync(string? searchTerm, Guid? categoryId)
+        {
+            var quests = await _questRepository.SearchQuestsAsync(searchTerm, categoryId);
+            return MapQuestsToDto(quests);
+        }
+
         public async Task<List<QuestDto>> GetAllQuestsAsync()
         {
             var quests = await _questRepository.GetAllQuestsAsync();
+            return MapQuestsToDto(quests);
+        }
 
+        private List<QuestDto> MapQuestsToDto(List<Quest> quests)
+        {
             return quests.Select(q => new QuestDto(
                 Id: q.Id,
                 Title: q.Title,
@@ -40,6 +56,12 @@ namespace Application.Services
                     Role: q.Author.Role,
                     IsBlocked: q.Author.IsBlocked
                 ),
+                CategoryId: q.CategoryId,
+                Category: q.Category != null ? new CategoryDto(
+                    Id: q.Category.Id,
+                    Name: q.Category.Name,
+                    Description: q.Category.Description
+                ) : null,
                 QuestRooms: q.QuestRooms.Select(r => new QuestRoomDto(
                     Id: r.Id,
                     QuestId: r.QuestId,

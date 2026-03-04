@@ -53,6 +53,8 @@ namespace Application.DTO
         string Status,
         Guid AuthorId,
         UserDto Author,
+        Guid? CategoryId,
+        CategoryDto? Category,
         List<QuestRoomDto> QuestRooms
     );
 

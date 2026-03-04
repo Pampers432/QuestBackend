@@ -20,6 +20,7 @@ namespace QuestsApi
             builder.Services.AddScoped<AuthRepository>();
             builder.Services.AddScoped<AuthService>();
             builder.Services.AddScoped<QuestSessionService>();
+            builder.Services.AddScoped<CategoryService>();
 
             builder.Services.AddOpenApi();
             builder.Services.AddDbContext<QuestPlatformContext>(options =>

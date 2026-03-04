@@ -6,6 +6,7 @@ public record CreateQuestRequest(
     string Subject,
     string Difficulty,
     string Status,
+    Guid? CategoryId,
     List<CreateQuestRoomRequest> Rooms
 );
 

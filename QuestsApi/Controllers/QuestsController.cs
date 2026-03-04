@@ -149,6 +149,20 @@ namespace QuestsApi.Controllers
             return Ok(await _questService.GetAllQuestsAsync());
         }
 
+        [HttpGet("GetLatestQuests")]
+        public async Task<IActionResult> GetLatestQuests([FromQuery] int count = 5)
+        {
+            var quests = await _questService.GetLatestQuestsAsync(count);
+            return Ok(quests);
+        }
+
+        [HttpGet("Search")]
+        public async Task<IActionResult> SearchQuests([FromQuery] string? searchTerm, [FromQuery] Guid? categoryId)
+        {
+            var quests = await _questService.SearchQuestsAsync(searchTerm, categoryId);
+            return Ok(quests);
+        }
+
 
         [HttpPost("CreateQuest")]
         public async Task<IActionResult> PostQuest([FromBody] CreateQuestRequest request)
@@ -160,6 +174,7 @@ namespace QuestsApi.Controllers
                 Subject = request.Subject,
                 Difficulty = request.Difficulty,
                 Status = request.Status,
+                CategoryId = request.CategoryId,
                 AuthorId = Guid.Parse("0EF0EA1A-7E15-402B-894F-5D7224607447"),
                 QuestRooms = request.Rooms.Select(r => new QuestRoom
                 {

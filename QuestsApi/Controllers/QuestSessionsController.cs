@@ -89,5 +89,28 @@ namespace QuestsApi.Controllers
             await _sessionService.SaveAnswerAsync(dto);
             return Ok();
         }
+
+        [HttpGet("Dashboard/{sessionId:guid}")]
+        public async Task<IActionResult> GetSessionDashboard(Guid sessionId)
+        {
+            var dashboard = await _sessionService.GetSessionDashboardAsync(sessionId);
+            if (dashboard == null)
+                return NotFound();
+
+            return Ok(dashboard);
+        }
+
+        [HttpGet("Export/{sessionId:guid}")]
+        public async Task<IActionResult> ExportSessionReport(Guid sessionId, [FromQuery] string format = "json")
+        {
+            var report = await _sessionService.ExportSessionReportAsync(sessionId, format);
+            if (report == null)
+                return NotFound();
+
+            var contentType = format.ToLower() == "csv" ? "text/csv" : "application/json";
+            var fileName = $"session_{sessionId}_{DateTime.UtcNow:yyyyMMdd}.{format}";
+
+            return File(report, contentType, fileName);
+        }
     }
 }

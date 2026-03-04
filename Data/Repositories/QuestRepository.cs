@@ -71,12 +71,54 @@ namespace QuestsApi
             return await _context.Quests
                 .AsNoTracking()
                 .Include(q => q.Author)
+                .Include(q => q.Category)
                 .Include(q => q.QuestRooms)
                     .ThenInclude(qr => qr.RoomTemplate)
                 .Include(q => q.QuestRooms)
                     .ThenInclude(qr => qr.Questions)
                         .ThenInclude(qe => qe.AnswerOptions)
                 .ToListAsync();
+        }
+
+        public async Task<List<Quest>> GetLatestQuestsAsync(int count)
+        {
+            return await _context.Quests
+                .AsNoTracking()
+                .Include(q => q.Author)
+                .Include(q => q.Category)
+                .Include(q => q.QuestRooms)
+                    .ThenInclude(qr => qr.RoomTemplate)
+                .OrderByDescending(q => q.Id)
+                .Take(count)
+                .ToListAsync();
+        }
+
+        public async Task<List<Quest>> SearchQuestsAsync(string? searchTerm, Guid? categoryId)
+        {
+            var query = _context.Quests
+                .AsNoTracking()
+                .Include(q => q.Author)
+                .Include(q => q.Category)
+                .Include(q => q.QuestRooms)
+                    .ThenInclude(qr => qr.RoomTemplate)
+                .Include(q => q.QuestRooms)
+                    .ThenInclude(qr => qr.Questions)
+                        .ThenInclude(qe => qe.AnswerOptions)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var term = searchTerm.Trim().ToLower();
+                query = query.Where(q => q.Title.ToLower().Contains(term) || 
+                                         (q.Description != null && q.Description.ToLower().Contains(term)));
+            }
+
+            if (categoryId.HasValue)
+            {
+                query = query.Where(q => q.CategoryId == categoryId.Value);
+            }
+
+            return await query.ToListAsync();
         }
 
 
@@ -104,6 +146,8 @@ namespace QuestsApi
                 .Include(s => s.Quest)
                     .ThenInclude(q => q.Author)
                 .Include(s => s.Quest)
+                    .ThenInclude(q => q.Category)
+                .Include(s => s.Quest)
                     .ThenInclude(q => q.QuestRooms)
                         .ThenInclude(qr => qr.RoomTemplate)
                 .Include(s => s.Quest)
@@ -115,6 +159,28 @@ namespace QuestsApi
                 .Include(s => s.Attempts)
                     .ThenInclude(a => a.UserAnswers)
                 .FirstOrDefaultAsync(s => s.AccessCode == accessCode);
+        }
+
+        public async Task<QuestSession?> GetSessionByIdAsync(Guid sessionId)
+        {
+            return await _context.QuestSessions
+                .AsNoTracking()
+                .Include(s => s.Quest)
+                .Include(s => s.Attempts)
+                    .ThenInclude(a => a.User)
+                .FirstOrDefaultAsync(s => s.Id == sessionId);
+        }
+
+        public async Task<QuestSession?> GetSessionByIdWithDetailsAsync(Guid sessionId)
+        {
+            return await _context.QuestSessions
+                .AsNoTracking()
+                .Include(s => s.Quest)
+                .Include(s => s.Attempts)
+                    .ThenInclude(a => a.User)
+                .Include(s => s.Attempts)
+                    .ThenInclude(a => a.UserAnswers)
+                .FirstOrDefaultAsync(s => s.Id == sessionId);
         }
 
         public async Task AddAttemptAsync(Attempt attempt)
