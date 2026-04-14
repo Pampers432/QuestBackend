@@ -7,7 +7,7 @@ namespace QuestsApi.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "admin")]
 public class CategoryController : ControllerBase
 {
     private readonly CategoryService _categoryService;
