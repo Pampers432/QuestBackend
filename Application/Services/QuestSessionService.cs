@@ -1,17 +1,25 @@
 ﻿using Application.DTO;
 using Domain.Entities;
+using Application.Interfaces;
 using QuestsApi;
 using QuestsApi.DTO;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Application.Services
 {
     public class QuestSessionService
     {
         private readonly QuestRepository _questRepository;
+        private readonly IQuestNotifier _notifier;
 
-        public QuestSessionService(QuestRepository questRepository)
+        public QuestSessionService(QuestRepository questRepository, IQuestNotifier notifier)
         {
             _questRepository = questRepository;
+            _notifier = notifier;
         }
 
         public async Task<QuestSession> CreateSessionAsync(QuestSession session)
@@ -158,6 +166,9 @@ namespace Application.Services
             attempt.Status = "completed";
 
             await _questRepository.UpdateAttemptAsync(attempt);
+
+            // Отправляем уведомление об обновлении сессии (новый результат)
+            await _notifier.NotifySessionUpdatedAsync(attempt.QuestSessionId);
         }
 
         public async Task SaveAnswerAsync(UserAnswerDto dto)

@@ -1,9 +1,9 @@
 ﻿using Application.DTO;
+using Application.Interfaces;
 using Domain.Entities;
 using QuestsApi;
 using System;
 using System.Collections.Generic;
-
 using System.Text;
 
 namespace Application.Services
