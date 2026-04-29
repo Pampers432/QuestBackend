@@ -1,0 +1,17 @@
+# .dockerignore for ASP.NET Core backend
+# Exclude development and build artifacts
+
+**/.dockerignore
+**/.git
+**/.gitignore
+**/.vs
+**/bin
+**/obj
+**/.next
+**/node_modules
+**/dist
+**/.env
+**/.env.*.local
+**/*.md
+**/Dockerfile
+**/docker-compose*.yml

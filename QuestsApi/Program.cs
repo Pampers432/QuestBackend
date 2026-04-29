@@ -77,6 +77,13 @@ namespace QuestsApi
 
             var app = builder.Build();
 
+            // Автоматическое создание базы данных (временно, пока нет миграций)
+            using (var scope = app.Services.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<QuestPlatformContext>();
+                context.Database.EnsureCreated();
+            }
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();

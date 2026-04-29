@@ -3,7 +3,9 @@ using Application.Services;
 using Domain.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using QuestsApi.DTO;
+using System.Security.Claims;
 
 namespace QuestsApi.Controllers
 {
@@ -164,9 +166,16 @@ namespace QuestsApi.Controllers
         }
 
 
+        [Authorize(Roles = "Teacher,Admin")]
         [HttpPost("CreateQuest")]
         public async Task<IActionResult> PostQuest([FromBody] CreateQuestRequest request)
         {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var authorId))
+            {
+                return Unauthorized(new { message = "Не удалось определить пользователя." });
+            }
+
             var quest = new Quest
             {
                 Title = request.Title,
@@ -175,7 +184,7 @@ namespace QuestsApi.Controllers
                 Difficulty = request.Difficulty,
                 Status = request.Status,
                 CategoryId = request.CategoryId,
-                AuthorId = Guid.Parse("0EF0EA1A-7E15-402B-894F-5D7224607447"),
+                AuthorId = authorId,
                 QuestRooms = request.Rooms.Select(r => new QuestRoom
                 {
                     RoomTemplateId = r.RoomTemplateId,
