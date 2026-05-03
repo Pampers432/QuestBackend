@@ -166,7 +166,6 @@ namespace QuestsApi.Controllers
         }
 
 
-        [Authorize(Roles = "Teacher,Admin")]
         [HttpPost("CreateQuest")]
         public async Task<IActionResult> PostQuest([FromBody] CreateQuestRequest request)
         {
