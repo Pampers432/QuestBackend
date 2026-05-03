@@ -40,6 +40,35 @@ namespace Application.Services
             return MapQuestsToDto(quests);
         }
 
+        public async Task<QuestDto?> GetQuestByIdAsync(Guid id)
+        {
+            var quest = await _questRepository.GetQuestByIdAsync(id);
+            if (quest == null) return null;
+            return MapQuestsToDto(new List<Quest> { quest }).FirstOrDefault();
+        }
+
+        public async Task<List<QuestDto>> GetQuestsByStatusAsync(string status)
+        {
+            var quests = await _questRepository.GetQuestsByStatusAsync(status);
+            return MapQuestsToDto(quests);
+        }
+
+        public async Task<List<QuestDto>> GetQuestsByAuthorAsync(Guid authorId)
+        {
+            var quests = await _questRepository.GetQuestsByAuthorAsync(authorId);
+            return MapQuestsToDto(quests);
+        }
+
+        public async Task<bool> UpdateQuestAsync(Quest quest)
+        {
+            return await _questRepository.UpdateQuestAsync(quest);
+        }
+
+        public async Task<bool> DeleteQuestAsync(Guid id)
+        {
+            return await _questRepository.DeleteQuestAsync(id);
+        }
+
         private List<QuestDto> MapQuestsToDto(List<Quest> quests)
         {
             return quests.Select(q => new QuestDto(

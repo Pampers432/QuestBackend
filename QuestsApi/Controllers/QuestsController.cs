@@ -1,4 +1,5 @@
 ﻿using Application.DTO;
+using Application.Interfaces;
 using Application.Services;
 using Domain.Entities;
 using Microsoft.AspNetCore.Http;
@@ -14,10 +15,12 @@ namespace QuestsApi.Controllers
     public class QuestsController : ControllerBase
     {
         private readonly QuestService _questService;
+        private readonly IQuestNotifier _notifier;
 
-        public QuestsController(QuestService questService)
+        public QuestsController(QuestService questService, IQuestNotifier notifier)
         {
             _questService = questService;
+            _notifier = notifier;
         }
 
         [HttpPost("PostZones")]
@@ -165,6 +168,141 @@ namespace QuestsApi.Controllers
             return Ok(quests);
         }
 
+        [HttpGet("GetById/{id:guid}")]
+        public async Task<IActionResult> GetQuestById(Guid id)
+        {
+            var quest = await _questService.GetQuestByIdAsync(id);
+            if (quest == null)
+                return NotFound("Квест не найден");
+            return Ok(quest);
+        }
+
+        [HttpGet("ByStatus")]
+        public async Task<IActionResult> GetQuestsByStatus([FromQuery] string status)
+        {
+            var quests = await _questService.GetQuestsByStatusAsync(status);
+            return Ok(quests);
+        }
+
+        [HttpGet("ByAuthor")]
+        public async Task<IActionResult> GetQuestsByAuthor()
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var authorId))
+            {
+                return Unauthorized(new { message = "Не удалось определить пользователя." });
+            }
+
+            var role = User.FindFirstValue(ClaimTypes.Role);
+            if (role == "Admin")
+            {
+                var allQuests = await _questService.GetAllQuestsAsync();
+                return Ok(allQuests);
+            }
+
+            var quests = await _questService.GetQuestsByAuthorAsync(authorId);
+            return Ok(quests);
+        }
+
+        [HttpPut("UpdateQuest/{id:guid}")]
+        public async Task<IActionResult> UpdateQuest(Guid id, [FromBody] CreateQuestRequest request)
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized(new { message = "Не удалось определить пользователя." });
+            }
+
+            var role = User.FindFirstValue(ClaimTypes.Role);
+            var existingQuest = await _questService.GetQuestByIdAsync(id);
+            if (existingQuest == null)
+            {
+                return NotFound("Квест не найден");
+            }
+
+            if (role != "Admin" && existingQuest.AuthorId != userId)
+            {
+                return Forbid("Вы можете редактировать только свои квесты.");
+            }
+
+            var quest = new Quest
+            {
+                Id = id,
+                Title = request.Title,
+                Description = request.Description,
+                Subject = request.Subject,
+                Difficulty = request.Difficulty,
+                Status = request.Status,
+                CategoryId = request.CategoryId,
+                AuthorId = existingQuest.AuthorId,
+                QuestRooms = request.Rooms.Select(r => new QuestRoom
+                {
+                    RoomTemplateId = r.RoomTemplateId,
+                    Title = r.Title,
+                    OrderIndex = r.OrderIndex,
+                    Questions = r.Questions.Select(q => new Question
+                    {
+                        Text = q.Text,
+                        Type = q.Type,
+                        Points = q.Points,
+                        Hint = q.Hint,
+                        OrderIndex = q.OrderIndex,
+                        AnswerOptions = q.AnswerOptions.Select(a => new AnswerOption
+                        {
+                            Text = a.Text,
+                            IsCorrect = a.IsCorrect,
+                            OrderIndex = a.OrderIndex
+                        }).ToList()
+                    }).ToList()
+                }).ToList()
+            };
+
+            var result = await _questService.UpdateQuestAsync(quest);
+            if (!result)
+            {
+                return BadRequest("Ошибка при обновлении квеста");
+            }
+
+            var updatedQuest = await _questService.GetQuestByIdAsync(id);
+            if (updatedQuest != null)
+            {
+                _ = _notifier.NotifyQuestUpdatedAsync(updatedQuest);
+            }
+
+            return Ok(new { message = "Квест успешно обновлён", questId = id });
+        }
+
+        [HttpDelete("DeleteQuest/{id:guid}")]
+        public async Task<IActionResult> DeleteQuest(Guid id)
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized(new { message = "Не удалось определить пользователя." });
+            }
+
+            var role = User.FindFirstValue(ClaimTypes.Role);
+            var existingQuest = await _questService.GetQuestByIdAsync(id);
+            if (existingQuest == null)
+            {
+                return NotFound("Квест не найден");
+            }
+
+            if (role != "Admin" && existingQuest.AuthorId != userId)
+            {
+                return Forbid("Вы можете удалять только свои квесты.");
+            }
+
+            var result = await _questService.DeleteQuestAsync(id);
+            if (!result)
+            {
+                return BadRequest("Ошибка при удалении квеста");
+            }
+
+            _ = _notifier.NotifyQuestDeletedAsync(id);
+
+            return Ok(new { message = "Квест успешно удалён", questId = id });
+        }
 
         [HttpPost("CreateQuest")]
         public async Task<IActionResult> PostQuest([FromBody] CreateQuestRequest request)
@@ -207,6 +345,12 @@ namespace QuestsApi.Controllers
             };
 
             var res = await _questService.CreateQuestAsync(quest);
+
+            var createdQuest = await _questService.GetQuestByIdAsync(quest.Id);
+            if (createdQuest != null)
+            {
+                _ = _notifier.NotifyQuestCreatedAsync(createdQuest);
+            }
 
             return Ok(new { message = res, quest.Id });
         }

@@ -183,6 +183,131 @@ namespace QuestsApi
                 .FirstOrDefaultAsync(s => s.Id == sessionId);
         }
 
+        public async Task<Quest?> GetQuestByIdAsync(Guid id)
+        {
+            return await _context.Quests
+                .Include(q => q.Author)
+                .Include(q => q.Category)
+                .Include(q => q.QuestRooms)
+                    .ThenInclude(qr => qr.RoomTemplate)
+                .Include(q => q.QuestRooms)
+                    .ThenInclude(qr => qr.Questions)
+                        .ThenInclude(qe => qe.AnswerOptions)
+                .FirstOrDefaultAsync(q => q.Id == id);
+        }
+
+        public async Task<List<Quest>> GetQuestsByStatusAsync(string status)
+        {
+            return await _context.Quests
+                .AsNoTracking()
+                .Include(q => q.Author)
+                .Include(q => q.Category)
+                .Include(q => q.QuestRooms)
+                    .ThenInclude(qr => qr.RoomTemplate)
+                .Include(q => q.QuestRooms)
+                    .ThenInclude(qr => qr.Questions)
+                        .ThenInclude(qe => qe.AnswerOptions)
+                .Where(q => q.Status == status)
+                .ToListAsync();
+        }
+
+        public async Task<List<Quest>> GetQuestsByAuthorAsync(Guid authorId)
+        {
+            return await _context.Quests
+                .AsNoTracking()
+                .Include(q => q.Author)
+                .Include(q => q.Category)
+                .Include(q => q.QuestRooms)
+                    .ThenInclude(qr => qr.RoomTemplate)
+                .Include(q => q.QuestRooms)
+                    .ThenInclude(qr => qr.Questions)
+                        .ThenInclude(qe => qe.AnswerOptions)
+                .Where(q => q.AuthorId == authorId)
+                .ToListAsync();
+        }
+
+        public async Task<bool> UpdateQuestAsync(Quest quest)
+        {
+            var existing = await _context.Quests
+                .Include(q => q.QuestRooms)
+                    .ThenInclude(qr => qr.Questions)
+                        .ThenInclude(q => q.AnswerOptions)
+                .FirstOrDefaultAsync(q => q.Id == quest.Id);
+
+            if (existing == null)
+                return false;
+
+            existing.Title = quest.Title;
+            existing.Description = quest.Description;
+            existing.Subject = quest.Subject;
+            existing.Difficulty = quest.Difficulty;
+            existing.Status = quest.Status;
+            existing.CategoryId = quest.CategoryId;
+
+            var existingRooms = existing.QuestRooms.ToList();
+            foreach (var room in existingRooms)
+            {
+                var questions = room.Questions.ToList();
+                foreach (var question in questions)
+                {
+                    var answers = question.AnswerOptions.ToList();
+                    _context.AnswerOptions.RemoveRange(answers);
+                }
+                _context.Questions.RemoveRange(questions);
+            }
+            _context.QuestRooms.RemoveRange(existingRooms);
+
+            foreach (var room in quest.QuestRooms)
+            {
+                room.Id = Guid.NewGuid();
+                room.QuestId = existing.Id;
+
+                foreach (var question in room.Questions)
+                {
+                    question.Id = Guid.NewGuid();
+                    question.QuestRoomId = room.Id;
+
+                    foreach (var answer in question.AnswerOptions)
+                    {
+                        answer.Id = Guid.NewGuid();
+                        answer.QuestionId = question.Id;
+                    }
+                }
+            }
+
+            existing.QuestRooms = quest.QuestRooms;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> DeleteQuestAsync(Guid id)
+        {
+            var quest = await _context.Quests
+                .Include(q => q.QuestRooms)
+                    .ThenInclude(qr => qr.Questions)
+                        .ThenInclude(q => q.AnswerOptions)
+                .FirstOrDefaultAsync(q => q.Id == id);
+
+            if (quest == null)
+                return false;
+
+            foreach (var room in quest.QuestRooms)
+            {
+                foreach (var question in room.Questions)
+                {
+                    var answers = question.AnswerOptions.ToList();
+                    _context.AnswerOptions.RemoveRange(answers);
+                }
+                _context.Questions.RemoveRange(room.Questions);
+            }
+            _context.QuestRooms.RemoveRange(quest.QuestRooms);
+
+            _context.Quests.Remove(quest);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         public async Task AddAttemptAsync(Attempt attempt)
         {
             await _context.Attempts.AddAsync(attempt);
