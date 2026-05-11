@@ -28,6 +28,8 @@ public partial class QuestPlatformContext : DbContext
 
     public virtual DbSet<RoomTemplate> RoomTemplates { get; set; }
 
+    public virtual DbSet<TemplateRename> TemplateRenames { get; set; }
+
     public virtual DbSet<User> Users { get; set; }
 
     public virtual DbSet<UserAnswer> UserAnswers { get; set; }
@@ -136,6 +138,22 @@ public partial class QuestPlatformContext : DbContext
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
             entity.Property(e => e.Name).HasMaxLength(100);
             entity.Property(e => e.PreviewImage).HasMaxLength(255);
+        });
+
+        modelBuilder.Entity<TemplateRename>(entity =>
+        {
+            entity.Property(e => e.SystemKey).HasMaxLength(100);
+            entity.Property(e => e.DisplayName).HasMaxLength(100);
+
+            entity.HasOne(d => d.Template).WithMany(p => p.TemplateRenames)
+                .HasForeignKey(d => d.TemplateId)
+                .HasConstraintName("FK_TemplateRenames_RoomTemplates")
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.User).WithMany(p => p.TemplateRenames)
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("FK_TemplateRenames_Users")
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<User>(entity =>

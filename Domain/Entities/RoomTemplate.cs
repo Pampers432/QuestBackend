@@ -14,4 +14,6 @@ public partial class RoomTemplate
     public string SceneData { get; set; } = null!;
 
     public virtual ICollection<QuestRoom> QuestRooms { get; set; } = new List<QuestRoom>();
+
+    public virtual ICollection<TemplateRename> TemplateRenames { get; set; } = new List<TemplateRename>();
 }

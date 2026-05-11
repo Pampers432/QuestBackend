@@ -16,11 +16,13 @@ namespace QuestsApi.Controllers
     {
         private readonly QuestService _questService;
         private readonly IQuestNotifier _notifier;
+        private readonly QuestGeneratorService _questGenerator;
 
-        public QuestsController(QuestService questService, IQuestNotifier notifier)
+        public QuestsController(QuestService questService, IQuestNotifier notifier, QuestGeneratorService questGenerator)
         {
             _questService = questService;
             _notifier = notifier;
+            _questGenerator = questGenerator;
         }
 
         [HttpPost("PostZones")]
@@ -353,6 +355,45 @@ namespace QuestsApi.Controllers
             }
 
             return Ok(new { message = res, quest.Id });
+        }
+
+        [HttpPost("GenerateQuest")]
+        public async Task<IActionResult> GenerateQuest([FromBody] GenerateQuestRequest request, [FromQuery] bool save = false)
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var authorId))
+            {
+                return Unauthorized(new { message = "Не удалось определить пользователя." });
+            }
+
+            if (save)
+            {
+                try
+                {
+                    var questId = await _questGenerator.GenerateAndSaveQuestAsync(request, authorId);
+                    return Ok(new { message = "Квест сгенерирован и сохранён", questId });
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return BadRequest(new { message = ex.Message });
+                }
+            }
+
+            var result = await _questGenerator.GenerateQuestAsync(request, authorId);
+            return Ok(result);
+        }
+
+        [HttpGet("analytics")]
+        public async Task<IActionResult> GetAnalytics()
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var authorId))
+            {
+                return Unauthorized(new { message = "Не удалось определить пользователя." });
+            }
+
+            var analytics = await _questService.GetAuthorAnalyticsAsync(authorId);
+            return Ok(analytics);
         }
 
         private async Task<string> SaveImage(IFormFile image)

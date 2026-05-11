@@ -20,4 +20,6 @@ public partial class User
     public virtual ICollection<QuestSession> QuestSessions { get; set; } = new List<QuestSession>();
 
     public virtual ICollection<Quest> Quests { get; set; } = new List<Quest>();
+
+    public virtual ICollection<TemplateRename> TemplateRenames { get; set; } = new List<TemplateRename>();
 }

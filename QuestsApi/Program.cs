@@ -28,6 +28,8 @@ namespace QuestsApi
             builder.Services.AddScoped<CategoryService>();
             // Реализация нотификаций через SignalR (зависит от IHubContext, который теперь доступен)
             builder.Services.AddScoped<IQuestNotifier, QuestHubNotifier>();
+            builder.Services.AddScoped<QuestGeneratorService>();
+            builder.Services.AddScoped<TemplateRenameRepository>();
 
             builder.Services.AddOpenApi();
             builder.Services.AddDbContext<QuestPlatformContext>(options =>
@@ -77,11 +79,11 @@ namespace QuestsApi
 
             var app = builder.Build();
 
-            // Автоматическое создание базы данных (временно, пока нет миграций)
+            // Применяем миграции для обновления схемы БД
             using (var scope = app.Services.CreateScope())
             {
                 var context = scope.ServiceProvider.GetRequiredService<QuestPlatformContext>();
-                context.Database.EnsureCreated();
+                context.Database.Migrate();
             }
 
             if (app.Environment.IsDevelopment())

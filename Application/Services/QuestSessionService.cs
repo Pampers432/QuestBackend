@@ -50,14 +50,15 @@ namespace Application.Services
                 IsActive: session.EndsAt == null || session.EndsAt > DateTime.UtcNow,
                 StartsAt: session.StartsAt,
                 EndsAt: session.EndsAt,
-                Quest: new QuestDto(
-                    Id: session.Quest.Id,
-                    Title: session.Quest.Title,
-                    Description: session.Quest.Description,
-                    Subject: session.Quest.Subject,
-                    Difficulty: session.Quest.Difficulty,
-                    Status: session.Quest.Status,
-                    AuthorId: session.Quest.AuthorId,
+                    Quest: new QuestDto(
+                        Id: session.Quest.Id,
+                        Title: session.Quest.Title,
+                        Description: session.Quest.Description,
+                        Subject: session.Quest.Subject,
+                        Difficulty: session.Quest.Difficulty,
+                        Status: session.Quest.Status,
+                        Visibility: session.Quest.Visibility,
+                        AuthorId: session.Quest.AuthorId,
                     Author: new UserDto(
                         Id: session.Quest.Author.Id,
                         Username: session.Quest.Author.Username,

@@ -7,6 +7,11 @@ public partial class Quest
 {
     public Guid Id { get; set; }
 
+    // Видимость контента в каталогах/доступе
+    // "Public" — виден в общем каталоге
+    // "Private" — виден только автору
+    public string Visibility { get; set; } = "Public";
+
     public string Title { get; set; } = null!;
 
     public string? Description { get; set; }

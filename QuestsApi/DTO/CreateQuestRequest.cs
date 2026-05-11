@@ -7,6 +7,8 @@ public record CreateQuestRequest(
     string Difficulty,
     string Status,
     Guid? CategoryId,
+    // Public — виден в общем каталоге, Private — только автору
+    string Visibility,
     List<CreateQuestRoomRequest> Rooms
 );
 

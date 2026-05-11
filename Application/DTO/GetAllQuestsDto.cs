@@ -51,6 +51,9 @@ namespace Application.DTO
         string Subject,
         string Difficulty,
         string Status,
+        // "Public" — в общем каталоге
+        // "Private" — только автору
+        string Visibility,
         Guid AuthorId,
         UserDto Author,
         Guid? CategoryId,

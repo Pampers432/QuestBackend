@@ -66,28 +66,40 @@ namespace QuestsApi
             return true;
         }
 
-        public async Task<List<Quest>> GetAllQuestsAsync()
+        private const string VisibilityPublic = "Public";
+        private const string VisibilityPrivate = "Private";
+
+        private IQueryable<Quest> BuildQuestBaseQuery(bool includeDetails)
         {
-            return await _context.Quests
+            IQueryable<Quest> query = _context.Quests
                 .AsNoTracking()
                 .Include(q => q.Author)
-                .Include(q => q.Category)
-                .Include(q => q.QuestRooms)
-                    .ThenInclude(qr => qr.RoomTemplate)
-                .Include(q => q.QuestRooms)
-                    .ThenInclude(qr => qr.Questions)
-                        .ThenInclude(qe => qe.AnswerOptions)
+                .Include(q => q.Category);
+
+            if (includeDetails)
+            {
+                query = query
+                    .Include(q => q.QuestRooms)
+                        .ThenInclude(qr => qr.RoomTemplate)
+                    .Include(q => q.QuestRooms)
+                        .ThenInclude(qr => qr.Questions)
+                            .ThenInclude(qe => qe.AnswerOptions);
+            }
+
+            return query;
+        }
+
+        public async Task<List<Quest>> GetAllQuestsAsync()
+        {
+            return await BuildQuestBaseQuery(includeDetails: true)
+                .Where(q => q.Visibility == VisibilityPublic)
                 .ToListAsync();
         }
 
         public async Task<List<Quest>> GetLatestQuestsAsync(int count)
         {
-            return await _context.Quests
-                .AsNoTracking()
-                .Include(q => q.Author)
-                .Include(q => q.Category)
-                .Include(q => q.QuestRooms)
-                    .ThenInclude(qr => qr.RoomTemplate)
+            return await BuildQuestBaseQuery(includeDetails: true)
+                .Where(q => q.Visibility == VisibilityPublic)
                 .OrderByDescending(q => q.Id)
                 .Take(count)
                 .ToListAsync();
@@ -95,22 +107,15 @@ namespace QuestsApi
 
         public async Task<List<Quest>> SearchQuestsAsync(string? searchTerm, Guid? categoryId)
         {
-            var query = _context.Quests
-                .AsNoTracking()
-                .Include(q => q.Author)
-                .Include(q => q.Category)
-                .Include(q => q.QuestRooms)
-                    .ThenInclude(qr => qr.RoomTemplate)
-                .Include(q => q.QuestRooms)
-                    .ThenInclude(qr => qr.Questions)
-                        .ThenInclude(qe => qe.AnswerOptions)
-                .AsQueryable();
+            var query = BuildQuestBaseQuery(includeDetails: true)
+                .Where(q => q.Visibility == VisibilityPublic);
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
                 var term = searchTerm.Trim().ToLower();
-                query = query.Where(q => q.Title.ToLower().Contains(term) || 
-                                         (q.Description != null && q.Description.ToLower().Contains(term)));
+                query = query.Where(q =>
+                    q.Title.ToLower().Contains(term) ||
+                    (q.Description != null && q.Description.ToLower().Contains(term)));
             }
 
             if (categoryId.HasValue)
@@ -185,43 +190,35 @@ namespace QuestsApi
 
         public async Task<Quest?> GetQuestByIdAsync(Guid id)
         {
-            return await _context.Quests
-                .Include(q => q.Author)
-                .Include(q => q.Category)
-                .Include(q => q.QuestRooms)
-                    .ThenInclude(qr => qr.RoomTemplate)
-                .Include(q => q.QuestRooms)
-                    .ThenInclude(qr => qr.Questions)
-                        .ThenInclude(qe => qe.AnswerOptions)
-                .FirstOrDefaultAsync(q => q.Id == id);
+            // Public-only по умолчанию (общий каталог / публичные страницы)
+            return await BuildQuestBaseQuery(includeDetails: true)
+                .FirstOrDefaultAsync(q => q.Id == id && q.Visibility == VisibilityPublic);
+        }
+
+        public async Task<Quest?> GetQuestByIdForUserAsync(Guid id, Guid userId, bool isAdmin)
+        {
+            // Admin может смотреть любые, остальные — только автору
+            if (isAdmin)
+            {
+                return await BuildQuestBaseQuery(includeDetails: true)
+                    .FirstOrDefaultAsync(q => q.Id == id);
+            }
+
+            return await BuildQuestBaseQuery(includeDetails: true)
+                .FirstOrDefaultAsync(q => q.Id == id && (q.Visibility == VisibilityPublic || q.AuthorId == userId));
         }
 
         public async Task<List<Quest>> GetQuestsByStatusAsync(string status)
         {
-            return await _context.Quests
-                .AsNoTracking()
-                .Include(q => q.Author)
-                .Include(q => q.Category)
-                .Include(q => q.QuestRooms)
-                    .ThenInclude(qr => qr.RoomTemplate)
-                .Include(q => q.QuestRooms)
-                    .ThenInclude(qr => qr.Questions)
-                        .ThenInclude(qe => qe.AnswerOptions)
-                .Where(q => q.Status == status)
+            return await BuildQuestBaseQuery(includeDetails: true)
+                .Where(q => q.Visibility == VisibilityPublic && q.Status == status)
                 .ToListAsync();
         }
 
         public async Task<List<Quest>> GetQuestsByAuthorAsync(Guid authorId)
         {
-            return await _context.Quests
-                .AsNoTracking()
-                .Include(q => q.Author)
-                .Include(q => q.Category)
-                .Include(q => q.QuestRooms)
-                    .ThenInclude(qr => qr.RoomTemplate)
-                .Include(q => q.QuestRooms)
-                    .ThenInclude(qr => qr.Questions)
-                        .ThenInclude(qe => qe.AnswerOptions)
+            // Returns ALL quests (Public and Private) authored by the user
+            return await BuildQuestBaseQuery(includeDetails: true)
                 .Where(q => q.AuthorId == authorId)
                 .ToListAsync();
         }
@@ -332,6 +329,17 @@ namespace QuestsApi
         {
             await _context.UserAnswers.AddAsync(answer);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<List<QuestSession>> GetSessionsByQuestIdsAsync(List<Guid> questIds)
+        {
+            return await _context.QuestSessions
+                .AsNoTracking()
+                .Include(s => s.Quest)
+                .Include(s => s.Attempts)
+                    .ThenInclude(a => a.User)
+                .Where(s => questIds.Contains(s.QuestId))
+                .ToListAsync();
         }
     }
 }

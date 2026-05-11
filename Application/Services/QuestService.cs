@@ -4,7 +4,9 @@ using Domain.Entities;
 using QuestsApi;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Application.Services
 {
@@ -47,6 +49,13 @@ namespace Application.Services
             return MapQuestsToDto(new List<Quest> { quest }).FirstOrDefault();
         }
 
+        public async Task<QuestDto?> GetQuestByIdForUserAsync(Guid id, Guid userId, bool isAdmin)
+        {
+            var quest = await _questRepository.GetQuestByIdForUserAsync(id, userId, isAdmin);
+            if (quest == null) return null;
+            return MapQuestsToDto(new List<Quest> { quest }).FirstOrDefault();
+        }
+
         public async Task<List<QuestDto>> GetQuestsByStatusAsync(string status)
         {
             var quests = await _questRepository.GetQuestsByStatusAsync(status);
@@ -77,8 +86,9 @@ namespace Application.Services
                 Description: q.Description,
                 Subject: q.Subject,
                 Difficulty: q.Difficulty,
-                Status: q.Status,
-                AuthorId: q.AuthorId,
+                    Status: q.Status,
+                    Visibility: q.Visibility,
+                    AuthorId: q.AuthorId,
                 Author: new UserDto(
                     Id: q.Author.Id,
                     Username: q.Author.Username,
@@ -160,6 +170,56 @@ namespace Application.Services
             var res = await _questRepository.GetAllTemplatesAsync();
 
             return res;
+        }
+
+        public async Task<AuthorAnalyticsDto?> GetAuthorAnalyticsAsync(Guid authorId)
+        {
+            var quests = await _questRepository.GetQuestsByAuthorAsync(authorId);
+            var questIds = quests.Select(q => q.Id).ToList();
+
+            var sessions = await _questRepository.GetSessionsByQuestIdsAsync(questIds);
+            var totalSessions = sessions.Count;
+
+            var allAttempts = sessions.SelectMany(s => s.Attempts).ToList();
+            var totalAttempts = allAttempts.Count;
+            var completedAttempts = allAttempts.Count(a => a.Status == "completed");
+
+            double? avgScorePercent = null;
+            var completedList = allAttempts.Where(a => a.Status == "completed").ToList();
+            if (completedList.Any())
+            {
+                double sum = 0;
+                foreach (var a in completedList)
+                {
+                    if (a.MaxScore > 0)
+                        sum += (double)a.Score / a.MaxScore * 100;
+                }
+                avgScorePercent = sum / completedList.Count;
+            }
+
+            var recentAttempts = allAttempts
+                .OrderByDescending(a => a.StartedAt)
+                .Take(10)
+                .Select(a => new AttemptInfoDto(
+                    a.Id,
+                    a.User.Username,
+                    a.Status,
+                    a.Score,
+                    a.MaxScore,
+                    a.StartedAt,
+                    a.FinishedAt,
+                    a.QuestSession.Quest.Title
+                ))
+                .ToList();
+
+            return new AuthorAnalyticsDto(
+                TotalQuests: quests.Count,
+                TotalSessions: totalSessions,
+                TotalAttempts: totalAttempts,
+                CompletedAttempts: completedAttempts,
+                AverageScorePercent: avgScorePercent,
+                RecentAttempts: recentAttempts
+            );
         }
     }
 }
