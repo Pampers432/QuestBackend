@@ -29,7 +29,10 @@ namespace QuestsApi
             // Реализация нотификаций через SignalR (зависит от IHubContext, который теперь доступен)
             builder.Services.AddScoped<IQuestNotifier, QuestHubNotifier>();
             builder.Services.AddScoped<QuestGeneratorService>();
+            builder.Services.AddScoped<RegistrationTokenRepository>();
             builder.Services.AddScoped<TemplateRenameRepository>();
+
+            builder.Services.AddHostedService<RegistrationTokenCleanupService>();
 
             builder.Services.AddOpenApi();
             builder.Services.AddDbContext<QuestPlatformContext>(options =>
@@ -84,6 +87,12 @@ namespace QuestsApi
             {
                 var context = scope.ServiceProvider.GetRequiredService<QuestPlatformContext>();
                 context.Database.Migrate();
+            }
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var categoryService = scope.ServiceProvider.GetRequiredService<CategoryService>();
+                categoryService.SeedDefaultCategoriesAsync().GetAwaiter().GetResult();
             }
 
             if (app.Environment.IsDevelopment())

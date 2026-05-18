@@ -22,6 +22,8 @@ public partial class QuestPlatformContext : DbContext
 
     public virtual DbSet<QuestRoom> QuestRooms { get; set; }
 
+    public virtual DbSet<RegistrationToken> RegistrationTokens { get; set; }
+
     public virtual DbSet<QuestSession> QuestSessions { get; set; }
 
     public virtual DbSet<Question> Questions { get; set; }
@@ -100,6 +102,21 @@ public partial class QuestPlatformContext : DbContext
                 .HasForeignKey(d => d.RoomTemplateId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_QuestRooms_Templates");
+        });
+
+        modelBuilder.Entity<RegistrationToken>(entity =>
+        {
+            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
+
+            entity.HasIndex(e => e.Email, "UQ__Registra__9A2B249A5C9F217E").IsUnique();
+
+            entity.Property(e => e.Email).HasMaxLength(255);
+            entity.Property(e => e.Token).HasMaxLength(500);
+
+            entity.HasOne(d => d.User).WithMany()
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_RegistrationTokens_Users");
         });
 
         modelBuilder.Entity<QuestSession>(entity =>

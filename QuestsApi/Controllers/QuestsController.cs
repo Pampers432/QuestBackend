@@ -237,6 +237,7 @@ namespace QuestsApi.Controllers
                 Status = request.Status,
                 CategoryId = request.CategoryId,
                 AuthorId = existingQuest.AuthorId,
+                Visibility = request.Visibility,
                 QuestRooms = request.Rooms.Select(r => new QuestRoom
                 {
                     RoomTemplateId = r.RoomTemplateId,
@@ -324,6 +325,7 @@ namespace QuestsApi.Controllers
                 Status = request.Status,
                 CategoryId = request.CategoryId,
                 AuthorId = authorId,
+                Visibility = request.Visibility,
                 QuestRooms = request.Rooms.Select(r => new QuestRoom
                 {
                     RoomTemplateId = r.RoomTemplateId,
