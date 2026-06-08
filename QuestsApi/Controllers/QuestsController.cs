@@ -164,9 +164,9 @@ namespace QuestsApi.Controllers
         }
 
         [HttpGet("Search")]
-        public async Task<IActionResult> SearchQuests([FromQuery] string? searchTerm, [FromQuery] Guid? categoryId)
+        public async Task<IActionResult> SearchQuests([FromQuery] string? searchTerm, [FromQuery] Guid? categoryId, [FromQuery] string? categoryName)
         {
-            var quests = await _questService.SearchQuestsAsync(searchTerm, categoryId);
+            var quests = await _questService.SearchQuestsAsync(searchTerm, categoryId, categoryName);
             return Ok(quests);
         }
 
@@ -278,33 +278,41 @@ namespace QuestsApi.Controllers
         [HttpDelete("DeleteQuest/{id:guid}")]
         public async Task<IActionResult> DeleteQuest(Guid id)
         {
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            try
             {
-                return Unauthorized(new { message = "Не удалось определить пользователя." });
-            }
+                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+                {
+                    return Unauthorized(new { message = "Не удалось определить пользователя." });
+                }
 
-            var role = User.FindFirstValue(ClaimTypes.Role);
-            var existingQuest = await _questService.GetQuestByIdAsync(id);
-            if (existingQuest == null)
+                var role = User.FindFirstValue(ClaimTypes.Role);
+                
+                var existingQuest = await _questService.GetQuestByIdForUserAsync(id, userId, role == "Admin");
+                if (existingQuest == null)
+                {
+                    return NotFound("Квест не найден");
+                }
+
+                if (role != "Admin" && existingQuest.AuthorId != userId)
+                {
+                    return Forbid("Вы можете удалять только свои квесты.");
+                }
+
+                var result = await _questService.DeleteQuestAsync(id);
+                if (!result)
+                {
+                    return BadRequest("Ошибка при удалении квеста");
+                }
+
+                _ = _notifier.NotifyQuestDeletedAsync(id);
+
+                return Ok(new { message = "Квест успешно удалён", questId = id });
+            }
+            catch (Exception ex)
             {
-                return NotFound("Квест не найден");
+                return StatusCode(500, new { message = "Внутренняя ошибка сервера", error = ex.Message });
             }
-
-            if (role != "Admin" && existingQuest.AuthorId != userId)
-            {
-                return Forbid("Вы можете удалять только свои квесты.");
-            }
-
-            var result = await _questService.DeleteQuestAsync(id);
-            if (!result)
-            {
-                return BadRequest("Ошибка при удалении квеста");
-            }
-
-            _ = _notifier.NotifyQuestDeletedAsync(id);
-
-            return Ok(new { message = "Квест успешно удалён", questId = id });
         }
 
         [HttpPost("CreateQuest")]

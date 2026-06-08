@@ -30,9 +30,9 @@ namespace Application.Services
             return MapQuestsToDto(quests);
         }
 
-        public async Task<List<QuestDto>> SearchQuestsAsync(string? searchTerm, Guid? categoryId)
+        public async Task<List<QuestDto>> SearchQuestsAsync(string? searchTerm, Guid? categoryId, string? categoryName)
         {
-            var quests = await _questRepository.SearchQuestsAsync(searchTerm, categoryId);
+            var quests = await _questRepository.SearchQuestsAsync(searchTerm, categoryId, categoryName);
             return MapQuestsToDto(quests);
         }
 

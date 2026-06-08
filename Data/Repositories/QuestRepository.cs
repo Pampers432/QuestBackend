@@ -105,7 +105,7 @@ namespace QuestsApi
                 .ToListAsync();
         }
 
-        public async Task<List<Quest>> SearchQuestsAsync(string? searchTerm, Guid? categoryId)
+        public async Task<List<Quest>> SearchQuestsAsync(string? searchTerm, Guid? categoryId, string? categoryName)
         {
             var query = BuildQuestBaseQuery(includeDetails: true)
                 .Where(q => q.Visibility == VisibilityPublic);
@@ -121,6 +121,12 @@ namespace QuestsApi
             if (categoryId.HasValue)
             {
                 query = query.Where(q => q.CategoryId == categoryId.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(categoryName))
+            {
+                var nameTerm = categoryName.Trim().ToLower();
+                query = query.Where(q => q.Category != null && q.Category.Name.ToLower().Contains(nameTerm));
             }
 
             return await query.ToListAsync();
@@ -284,17 +290,33 @@ namespace QuestsApi
                 .Include(q => q.QuestRooms)
                     .ThenInclude(qr => qr.Questions)
                         .ThenInclude(q => q.AnswerOptions)
+                .Include(q => q.QuestRooms)
+                    .ThenInclude(qr => qr.Questions)
+                        .ThenInclude(q => q.UserAnswers)
+                .Include(q => q.QuestSessions)
+                    .ThenInclude(qs => qs.Attempts)
+                        .ThenInclude(a => a.UserAnswers)
                 .FirstOrDefaultAsync(q => q.Id == id);
 
             if (quest == null)
                 return false;
 
+            foreach (var session in quest.QuestSessions)
+            {
+                foreach (var attempt in session.Attempts)
+                {
+                    _context.UserAnswers.RemoveRange(attempt.UserAnswers);
+                }
+                _context.Attempts.RemoveRange(session.Attempts);
+            }
+            _context.QuestSessions.RemoveRange(quest.QuestSessions);
+
             foreach (var room in quest.QuestRooms)
             {
                 foreach (var question in room.Questions)
                 {
-                    var answers = question.AnswerOptions.ToList();
-                    _context.AnswerOptions.RemoveRange(answers);
+                    _context.AnswerOptions.RemoveRange(question.AnswerOptions);
+                    _context.UserAnswers.RemoveRange(question.UserAnswers);
                 }
                 _context.Questions.RemoveRange(room.Questions);
             }

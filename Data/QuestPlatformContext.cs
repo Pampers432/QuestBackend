@@ -96,6 +96,7 @@ public partial class QuestPlatformContext : DbContext
 
             entity.HasOne(d => d.Quest).WithMany(p => p.QuestRooms)
                 .HasForeignKey(d => d.QuestId)
+                .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_QuestRooms_Quests");
 
             entity.HasOne(d => d.RoomTemplate).WithMany(p => p.QuestRooms)
@@ -130,6 +131,7 @@ public partial class QuestPlatformContext : DbContext
 
             entity.HasOne(d => d.Quest).WithMany(p => p.QuestSessions)
                 .HasForeignKey(d => d.QuestId)
+                .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_QuestSessions_Quests");
 
             entity.HasOne(d => d.StartedByNavigation).WithMany(p => p.QuestSessions)
