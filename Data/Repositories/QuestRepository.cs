@@ -191,6 +191,23 @@ namespace QuestsApi
                     .ThenInclude(a => a.User)
                 .Include(s => s.Attempts)
                     .ThenInclude(a => a.UserAnswers)
+                    .ThenInclude(ua => ua.Question)
+                .FirstOrDefaultAsync(s => s.Id == sessionId);
+        }
+
+        public async Task<QuestSession?> GetSessionWithFullDetailsAsync(Guid sessionId)
+        {
+            return await _context.QuestSessions
+                .AsNoTracking()
+                .Include(s => s.Quest)
+                    .ThenInclude(q => q.QuestRooms)
+                        .ThenInclude(qr => qr.Questions)
+                            .ThenInclude(qq => qq.AnswerOptions)
+                .Include(s => s.Attempts)
+                    .ThenInclude(a => a.User)
+                .Include(s => s.Attempts)
+                    .ThenInclude(a => a.UserAnswers)
+                    .ThenInclude(ua => ua.Question)
                 .FirstOrDefaultAsync(s => s.Id == sessionId);
         }
 

@@ -107,8 +107,14 @@ namespace QuestsApi.Controllers
             if (report == null)
                 return NotFound();
 
-            var contentType = format.ToLower() == "csv" ? "text/csv" : "application/json";
-            var fileName = $"session_{sessionId}_{DateTime.UtcNow:yyyyMMdd}.{format}";
+            var contentType = format.ToLower() switch
+            {
+                "csv" => "text/csv",
+                "xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                _ => "application/json"
+            };
+            var ext = format.ToLower() == "xlsx" ? "xlsx" : format;
+            var fileName = $"session_{sessionId}_{DateTime.UtcNow:yyyyMMdd}.{ext}";
 
             return File(report, contentType, fileName);
         }

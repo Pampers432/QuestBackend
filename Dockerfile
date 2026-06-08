@@ -14,7 +14,7 @@ RUN dotnet build "QuestsApi.csproj" -c Release -o /app/build
 
 # Stage 2: Publish
 FROM build AS publish
-RUN dotnet publish "QuestsApi.csproj" -c Release -o /app/publish /p:UseAppHost=true
+RUN dotnet publish "QuestsApi.csproj" -c Release -o /app/publish
 
 # Stage 3: Final runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final

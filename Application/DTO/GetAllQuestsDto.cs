@@ -18,7 +18,8 @@ namespace Application.DTO
         bool? IsCorrect,
         int OrderIndex,
         string? MatchPair,
-        int? SequenceOrder
+        int? SequenceOrder,
+        string? Attachment
     );
 
     public record QuestionDto(

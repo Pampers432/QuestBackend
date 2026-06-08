@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using QuestsApi.Data;
 using QuestsApi.Hubs;
+using QuestsApi.Middleware;
 using QuestsApi.Services;
 using System.Text;
 
@@ -62,13 +63,16 @@ namespace QuestsApi
                 };
             });
 
+            var allowedOrigins = (builder.Configuration["AllowedOrigins"] ?? "http://localhost:3000,https://localhost:3000")
+                .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowNext", policy => policy
-                    .WithOrigins("http://localhost:3000", "https://localhost:3000")
+                options.AddDefaultPolicy(policy => policy
+                    .WithOrigins(allowedOrigins)
                     .AllowAnyHeader()
                     .AllowAnyMethod()
-                    .AllowCredentials()); // Required for SignalR
+                    .AllowCredentials());
             });
 
             builder.Services.AddSwaggerGen();
@@ -105,10 +109,12 @@ namespace QuestsApi
 
             app.UseRouting();
 
-            app.UseCors("AllowNext");
+            app.UseCors();
 
             app.UseAuthentication();
             app.UseAuthorization();
+
+            app.UseMiddleware<ExceptionMiddleware>();
 
             app.MapControllers();
             app.MapHub<QuestHub>("/questHub");

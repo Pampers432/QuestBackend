@@ -24,6 +24,7 @@ public record CreateQuestionRequest(
     string Type,
     int Points,
     string? Hint,
+    string? Attachment,
     int OrderIndex,
     List<CreateAnswerOptionRequest> AnswerOptions
 );
@@ -31,5 +32,6 @@ public record CreateQuestionRequest(
 public record CreateAnswerOptionRequest(
     string? Text,
     bool? IsCorrect,
+    string? Attachment,
     int OrderIndex
 );

@@ -41,6 +41,7 @@ public partial class QuestPlatformContext : DbContext
         modelBuilder.Entity<AnswerOption>(entity =>
         {
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Attachment).HasMaxLength(255);
 
             entity.HasOne(d => d.Question).WithMany(p => p.AnswerOptions)
                 .HasForeignKey(d => d.QuestionId)

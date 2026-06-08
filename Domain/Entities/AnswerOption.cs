@@ -17,6 +17,8 @@ public partial class AnswerOption
 
     public int? SequenceOrder { get; set; }
 
+    public string? Attachment { get; set; }
+
     public int OrderIndex { get; set; }
 
     public virtual Question Question { get; set; } = null!;

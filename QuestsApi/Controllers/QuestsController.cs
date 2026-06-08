@@ -249,11 +249,13 @@ namespace QuestsApi.Controllers
                         Type = q.Type,
                         Points = q.Points,
                         Hint = q.Hint,
+                        Attachment = q.Attachment,
                         OrderIndex = q.OrderIndex,
                         AnswerOptions = q.AnswerOptions.Select(a => new AnswerOption
                         {
                             Text = a.Text,
                             IsCorrect = a.IsCorrect,
+                            Attachment = a.Attachment,
                             OrderIndex = a.OrderIndex
                         }).ToList()
                     }).ToList()
@@ -345,11 +347,13 @@ namespace QuestsApi.Controllers
                         Type = q.Type,
                         Points = q.Points,
                         Hint = q.Hint,
+                        Attachment = q.Attachment,
                         OrderIndex = q.OrderIndex,
                         AnswerOptions = q.AnswerOptions.Select(a => new AnswerOption
                         {
                             Text = a.Text,
                             IsCorrect = a.IsCorrect,
+                            Attachment = a.Attachment,
                             OrderIndex = a.OrderIndex
                         }).ToList()
                     }).ToList()

@@ -124,7 +124,8 @@ namespace Application.Services
                             IsCorrect: a.IsCorrect,
                             OrderIndex: a.OrderIndex,
                             MatchPair: a.MatchPair,
-                            SequenceOrder: a.SequenceOrder
+                            SequenceOrder: a.SequenceOrder,
+                            Attachment: a.Attachment
                         )).ToList()
                     )).ToList(),
                     RoomTemplate: new RoomTemplateDto(
