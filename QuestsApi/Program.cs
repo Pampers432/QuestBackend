@@ -9,6 +9,7 @@ using QuestsApi.Hubs;
 using QuestsApi.Middleware;
 using QuestsApi.Services;
 using System.Text;
+using Npgsql;
 
 namespace QuestsApi
 {
@@ -37,8 +38,10 @@ namespace QuestsApi
 builder.Services.AddScoped<IImageService, CloudinaryImageService>();
 
             builder.Services.AddOpenApi();
+
+            var connectionString = ResolveConnectionString(builder.Configuration);
             builder.Services.AddDbContext<QuestPlatformContext>(options =>
-                options.UseNpgsql(builder.Configuration.GetConnectionString("QuestPlatform")));
+                options.UseNpgsql(connectionString));
 
             var jwtKey = builder.Configuration["Jwt:Key"]
                          ?? throw new InvalidOperationException("JWT Key is not configured");
@@ -124,6 +127,38 @@ builder.Services.AddScoped<IImageService, CloudinaryImageService>();
             app.UseStaticFiles();
 
             app.Run();
+        }
+
+        private static string ResolveConnectionString(IConfiguration configuration)
+        {
+            var connectionString = configuration.GetConnectionString("QuestPlatform");
+            if (string.IsNullOrEmpty(connectionString))
+                connectionString = configuration["DATABASE_URL"];
+
+            if (string.IsNullOrEmpty(connectionString))
+                throw new InvalidOperationException("Connection string 'QuestPlatform' or 'DATABASE_URL' is not configured.");
+
+            if (connectionString.StartsWith("postgres://") || connectionString.StartsWith("postgresql://"))
+            {
+                var uri = new Uri(connectionString);
+                var userInfo = uri.UserInfo.Split(':');
+                var user = userInfo[0];
+                var password = userInfo.Length > 1 ? userInfo[1] : "";
+                var database = uri.AbsolutePath.TrimStart('/');
+
+                var builder = new Npgsql.NpgsqlConnectionStringBuilder
+                {
+                    Host = uri.Host,
+                    Port = uri.IsDefaultPort ? 5432 : uri.Port,
+                    Database = database,
+                    Username = user,
+                    Password = password,
+                    SslMode = Npgsql.SslMode.Require
+                };
+                return builder.ConnectionString;
+            }
+
+            return connectionString;
         }
     }
 }
