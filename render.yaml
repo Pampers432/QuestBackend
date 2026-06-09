@@ -19,7 +19,7 @@ services:
       - key: Jwt__Audience
         value: QuestPlatformFrontend
       - key: AllowedOrigins
-        value: https://quest-frontend.onrender.com
+        value: https://quest-frontend-csbe.onrender.com
       - key: Cloudinary__CloudName
         value: YOUR_CLOUD_NAME
       - key: Cloudinary__ApiKey
