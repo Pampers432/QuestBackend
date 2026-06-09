@@ -27,5 +27,5 @@ services:
 
 databases:
   - name: quest-db
-    databaseName: QuestPlatform
+    databaseName: quest_platform
     plan: free
