@@ -34,6 +34,7 @@ namespace QuestsApi
             builder.Services.AddScoped<TemplateRenameRepository>();
 
             builder.Services.AddHostedService<RegistrationTokenCleanupService>();
+builder.Services.AddScoped<IImageService, CloudinaryImageService>();
 
             builder.Services.AddOpenApi();
             builder.Services.AddDbContext<QuestPlatformContext>(options =>

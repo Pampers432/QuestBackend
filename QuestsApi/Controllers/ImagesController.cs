@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QuestsApi.Services;
 
 namespace QuestsApi.Controllers;
 
@@ -7,11 +8,11 @@ namespace QuestsApi.Controllers;
 [Route("api/[controller]")]
 public class ImagesController : ControllerBase
 {
-    private readonly IWebHostEnvironment _env;
+    private readonly IImageService _imageService;
 
-    public ImagesController(IWebHostEnvironment env)
+    public ImagesController(IImageService imageService)
     {
-        _env = env;
+        _imageService = imageService;
     }
 
     [HttpPost("upload")]
@@ -26,20 +27,10 @@ public class ImagesController : ControllerBase
         if (!allowedTypes.Contains(file.ContentType.ToLower()))
             return BadRequest(new { error = "Допустимы только изображения (JPEG, PNG, GIF, WebP, SVG)." });
 
-        var uploadsPath = Path.Combine(_env.WebRootPath, "uploads");
-        if (!Directory.Exists(uploadsPath))
-            Directory.CreateDirectory(uploadsPath);
+        using var stream = file.OpenReadStream();
+        var url = await _imageService.UploadAsync(stream, file.FileName);
 
-        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-        var fileName = $"{Guid.NewGuid()}{ext}";
-        var filePath = Path.Combine(uploadsPath, fileName);
-
-        using (var stream = new FileStream(filePath, FileMode.Create))
-        {
-            await file.CopyToAsync(stream);
-        }
-
-        return Ok(new { url = $"/uploads/{fileName}", fileName });
+        return Ok(new { url, fileName = file.FileName });
     }
 
     [HttpPost("upload-base64")]
@@ -55,32 +46,15 @@ public class ImagesController : ControllerBase
             return BadRequest(new { error = "Неверный формат Base64." });
 
         var base64Data = request.Data[(dataIndex + 1)..];
-        var mimeType = request.Data[5..dataIndex]; // data:image/png;base64 -> image/png
+        var mimeType = request.Data[5..dataIndex];
 
         var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
         if (!allowedTypes.Any(t => mimeType.Contains(t)))
             return BadRequest(new { error = "Допустимы только изображения (JPEG, PNG, GIF, WebP)." });
 
-        var ext = mimeType switch
-        {
-            var m when m.Contains("jpeg") => ".jpg",
-            var m when m.Contains("png") => ".png",
-            var m when m.Contains("gif") => ".gif",
-            var m when m.Contains("webp") => ".webp",
-            _ => ".png"
-        };
+        var url = await _imageService.UploadBase64Async(base64Data, mimeType);
 
-        var uploadsPath = Path.Combine(_env.WebRootPath, "uploads");
-        if (!Directory.Exists(uploadsPath))
-            Directory.CreateDirectory(uploadsPath);
-
-        var fileName = $"{Guid.NewGuid()}{ext}";
-        var filePath = Path.Combine(uploadsPath, fileName);
-
-        var bytes = Convert.FromBase64String(base64Data);
-        await System.IO.File.WriteAllBytesAsync(filePath, bytes);
-
-        return Ok(new { url = $"/uploads/{fileName}", fileName });
+        return Ok(new { url, fileName = "upload" });
     }
 }
 

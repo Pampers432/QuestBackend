@@ -20,6 +20,12 @@ services:
         value: QuestPlatformFrontend
       - key: AllowedOrigins
         value: https://quest-frontend.onrender.com
+      - key: Cloudinary__CloudName
+        value: YOUR_CLOUD_NAME
+      - key: Cloudinary__ApiKey
+        value: YOUR_API_KEY
+      - key: Cloudinary__ApiSecret
+        value: YOUR_API_SECRET
 
 databases:
   - name: quest-db
