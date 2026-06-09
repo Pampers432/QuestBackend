@@ -20,10 +20,6 @@ services:
         value: QuestPlatformFrontend
       - key: AllowedOrigins
         value: https://quest-frontend.onrender.com
-    disk:
-      name: uploads
-      mountPath: /app/wwwroot/uploads
-      sizeGB: 1
 
 databases:
   - name: quest-db
