@@ -223,6 +223,21 @@ namespace Application.Services
             );
         }
 
+        public async Task<List<QuestSessionListItemDto>> GetRecentSessionsByAuthorAsync(Guid authorId, int count = 10)
+        {
+            var sessions = await _questRepository.GetRecentSessionsByAuthorAsync(authorId, count);
+
+            return sessions.Select(s => new QuestSessionListItemDto(
+                Id: s.Id,
+                QuestTitle: s.Quest.Title,
+                AccessCode: s.AccessCode,
+                StartsAt: s.StartsAt,
+                EndsAt: s.EndsAt,
+                IsActive: s.IsActive && (s.EndsAt == null || s.EndsAt > DateTime.UtcNow),
+                ParticipantCount: s.Attempts.Count
+            )).ToList();
+        }
+
         public async Task<byte[]?> ExportSessionReportAsync(Guid sessionId, string format)
         {
             if (format.ToLower() == "xlsx")

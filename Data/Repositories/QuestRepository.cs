@@ -380,5 +380,17 @@ namespace QuestsApi
                 .Where(s => questIds.Contains(s.QuestId))
                 .ToListAsync();
         }
+
+        public async Task<List<QuestSession>> GetRecentSessionsByAuthorAsync(Guid authorId, int count)
+        {
+            return await _context.QuestSessions
+                .AsNoTracking()
+                .Include(s => s.Quest)
+                .Include(s => s.Attempts)
+                .Where(s => s.Quest.AuthorId == authorId)
+                .OrderByDescending(s => s.StartsAt)
+                .Take(count)
+                .ToListAsync();
+        }
     }
 }

@@ -90,6 +90,17 @@ namespace QuestsApi.Controllers
             return Ok();
         }
 
+        [HttpGet("RecentByAuthor")]
+        public async Task<IActionResult> GetRecentSessionsByAuthor([FromQuery] int count = 10)
+        {
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var authorId))
+                return Unauthorized(new { message = "Не удалось определить пользователя." });
+
+            var sessions = await _sessionService.GetRecentSessionsByAuthorAsync(authorId, count);
+            return Ok(sessions);
+        }
+
         [HttpGet("Dashboard/{sessionId:guid}")]
         public async Task<IActionResult> GetSessionDashboard(Guid sessionId)
         {
