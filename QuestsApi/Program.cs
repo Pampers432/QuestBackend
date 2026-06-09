@@ -37,7 +37,7 @@ namespace QuestsApi
 
             builder.Services.AddOpenApi();
             builder.Services.AddDbContext<QuestPlatformContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("QuestPlatform")));
+                options.UseNpgsql(builder.Configuration.GetConnectionString("QuestPlatform")));
 
             var jwtKey = builder.Configuration["Jwt:Key"]
                          ?? throw new InvalidOperationException("JWT Key is not configured");

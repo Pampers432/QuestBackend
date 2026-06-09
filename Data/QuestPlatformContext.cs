@@ -40,7 +40,7 @@ public partial class QuestPlatformContext : DbContext
     {
         modelBuilder.Entity<AnswerOption>(entity =>
         {
-            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Id).HasDefaultValueSql("gen_random_uuid()");
             entity.Property(e => e.Attachment).HasMaxLength(255);
 
             entity.HasOne(d => d.Question).WithMany(p => p.AnswerOptions)
@@ -50,8 +50,8 @@ public partial class QuestPlatformContext : DbContext
 
         modelBuilder.Entity<Attempt>(entity =>
         {
-            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
-            entity.Property(e => e.StartedAt).HasDefaultValueSql("(sysdatetime())");
+            entity.Property(e => e.Id).HasDefaultValueSql("gen_random_uuid()");
+            entity.Property(e => e.StartedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.Status).HasMaxLength(20);
 
             entity.HasOne(d => d.QuestSession).WithMany(p => p.Attempts)
@@ -66,14 +66,14 @@ public partial class QuestPlatformContext : DbContext
 
         modelBuilder.Entity<Category>(entity =>
         {
-            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Id).HasDefaultValueSql("gen_random_uuid()");
             entity.Property(e => e.Name).HasMaxLength(100);
             entity.Property(e => e.Description).HasMaxLength(500);
         });
 
         modelBuilder.Entity<Quest>(entity =>
         {
-            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Id).HasDefaultValueSql("gen_random_uuid()");
             entity.Property(e => e.Difficulty).HasMaxLength(20);
             entity.Property(e => e.Status).HasMaxLength(20);
             entity.Property(e => e.Subject).HasMaxLength(100);
@@ -92,7 +92,7 @@ public partial class QuestPlatformContext : DbContext
 
         modelBuilder.Entity<QuestRoom>(entity =>
         {
-            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Id).HasDefaultValueSql("gen_random_uuid()");
             entity.Property(e => e.Title).HasMaxLength(150);
 
             entity.HasOne(d => d.Quest).WithMany(p => p.QuestRooms)
@@ -108,7 +108,7 @@ public partial class QuestPlatformContext : DbContext
 
         modelBuilder.Entity<RegistrationToken>(entity =>
         {
-            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Id).HasDefaultValueSql("gen_random_uuid()");
 
             entity.HasIndex(e => e.Email, "UQ__Registra__9A2B249A5C9F217E").IsUnique();
 
@@ -125,10 +125,10 @@ public partial class QuestPlatformContext : DbContext
         {
             entity.HasIndex(e => e.AccessCode, "UQ__QuestSes__24C20D0C80A32EF2").IsUnique();
 
-            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Id).HasDefaultValueSql("gen_random_uuid()");
             entity.Property(e => e.AccessCode).HasMaxLength(50);
             entity.Property(e => e.IsActive).HasDefaultValue(true);
-            entity.Property(e => e.StartsAt).HasDefaultValueSql("(sysdatetime())");
+            entity.Property(e => e.StartsAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
             entity.HasOne(d => d.Quest).WithMany(p => p.QuestSessions)
                 .HasForeignKey(d => d.QuestId)
@@ -143,7 +143,7 @@ public partial class QuestPlatformContext : DbContext
 
         modelBuilder.Entity<Question>(entity =>
         {
-            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Id).HasDefaultValueSql("gen_random_uuid()");
             entity.Property(e => e.Attachment).HasMaxLength(255);
             entity.Property(e => e.TargetObject).HasMaxLength(100);
             entity.Property(e => e.Type).HasMaxLength(30);
@@ -155,7 +155,7 @@ public partial class QuestPlatformContext : DbContext
 
         modelBuilder.Entity<RoomTemplate>(entity =>
         {
-            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Id).HasDefaultValueSql("gen_random_uuid()");
             entity.Property(e => e.Name).HasMaxLength(100);
             entity.Property(e => e.PreviewImage).HasMaxLength(255);
         });
@@ -180,7 +180,7 @@ public partial class QuestPlatformContext : DbContext
         {
             entity.HasIndex(e => e.Username, "UQ__Users__536C85E454869B91").IsUnique();
 
-            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
+            entity.Property(e => e.Id).HasDefaultValueSql("gen_random_uuid()");
             entity.Property(e => e.PasswordHash).HasMaxLength(255);
             entity.Property(e => e.Role).HasMaxLength(20);
             entity.Property(e => e.Username).HasMaxLength(100);
@@ -188,8 +188,8 @@ public partial class QuestPlatformContext : DbContext
 
         modelBuilder.Entity<UserAnswer>(entity =>
         {
-            entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
-            entity.Property(e => e.AnsweredAt).HasDefaultValueSql("(sysdatetime())");
+            entity.Property(e => e.Id).HasDefaultValueSql("gen_random_uuid()");
+            entity.Property(e => e.AnsweredAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
             entity.HasOne(d => d.Attempt).WithMany(p => p.UserAnswers)
                 .HasForeignKey(d => d.AttemptId)
