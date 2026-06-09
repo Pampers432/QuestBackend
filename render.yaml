@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: quest-backend
+    runtime: image
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_URLS
+        value: http://+:80
+      - key: ConnectionStrings__QuestPlatform
+        fromDatabase:
+          name: quest-db
+          property: connectionString
+      - key: Jwt__Key
+        value: CHANGE_ME_QUEST_PLATFORM_JWT_KEY_2026
+      - key: Jwt__Issuer
+        value: QuestPlatformApi
+      - key: Jwt__Audience
+        value: QuestPlatformFrontend
+      - key: AllowedOrigins
+        value: https://quest-frontend.onrender.com
+    disk:
+      name: uploads
+      mountPath: /app/wwwroot/uploads
+      sizeGB: 1
+
+databases:
+  - name: quest-db
+    databaseName: QuestPlatform
+    plan: free
