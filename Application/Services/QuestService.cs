@@ -175,10 +175,15 @@ namespace Application.Services
 
         public async Task<AuthorAnalyticsDto?> GetAuthorAnalyticsAsync(Guid authorId)
         {
-            var quests = await _questRepository.GetQuestsByAuthorAsync(authorId);
-            var questIds = quests.Select(q => q.Id).ToList();
+            var sessions = await _questRepository.GetSessionsByStartedByAsync(authorId);
 
-            var sessions = await _questRepository.GetSessionsByQuestIdsAsync(questIds);
+            var quests = sessions
+                .Select(s => s.Quest)
+                .Where(q => q != null)
+                .GroupBy(q => q!.Id)
+                .Select(g => g.First()!)
+                .ToList();
+
             var totalSessions = sessions.Count;
 
             var allAttempts = sessions.SelectMany(s => s.Attempts).ToList();

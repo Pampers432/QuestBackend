@@ -387,9 +387,20 @@ namespace QuestsApi
                 .AsNoTracking()
                 .Include(s => s.Quest)
                 .Include(s => s.Attempts)
-                .Where(s => s.Quest.AuthorId == authorId)
+                .Where(s => s.StartedBy == authorId)
                 .OrderByDescending(s => s.StartsAt)
                 .Take(count)
+                .ToListAsync();
+        }
+
+        public async Task<List<QuestSession>> GetSessionsByStartedByAsync(Guid userId)
+        {
+            return await _context.QuestSessions
+                .AsNoTracking()
+                .Include(s => s.Quest)
+                .Include(s => s.Attempts)
+                    .ThenInclude(a => a.User)
+                .Where(s => s.StartedBy == userId)
                 .ToListAsync();
         }
     }

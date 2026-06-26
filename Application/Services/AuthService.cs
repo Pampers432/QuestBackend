@@ -2,6 +2,7 @@
 using Data.Repositories;
 using Domain.Entities;
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 
 namespace Application.Services
 {
@@ -20,6 +21,19 @@ namespace Application.Services
             if (string.IsNullOrWhiteSpace(normalizedUsername) || string.IsNullOrWhiteSpace(request.Password))
             {
                 return (false, "Логин и пароль обязательны", null);
+            }
+
+            if (request.Role.Equals("teacher", StringComparison.OrdinalIgnoreCase))
+            {
+                var password = request.Password;
+                if (password.Length < 8)
+                    return (false, "Пароль должен содержать не менее 8 символов", null);
+                if (!Regex.IsMatch(password, "[A-Za-zА-Яа-я]"))
+                    return (false, "Пароль должен содержать хотя бы одну букву", null);
+                if (!Regex.IsMatch(password, "[0-9]"))
+                    return (false, "Пароль должен содержать хотя бы одну цифру", null);
+                if (!Regex.IsMatch(password, "[^A-Za-zА-Яа-я0-9]"))
+                    return (false, "Пароль должен содержать хотя бы один специальный символ", null);
             }
 
             var existingUser = await _repository.GetByUsernameAsync(normalizedUsername);

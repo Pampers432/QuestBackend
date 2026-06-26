@@ -19,6 +19,15 @@ namespace QuestsApi.Controllers
         [HttpPost("CreateSession")]
         public async Task<IActionResult> CreateSession(CreateSessionDto dto)
         {
+            if (dto.TimeLimit.HasValue && dto.TimeLimit.Value > 0 && dto.EndsAt.HasValue)
+            {
+                var maxAllowedEnd = dto.StartsAt.AddMinutes(dto.TimeLimit.Value);
+                if (dto.EndsAt.Value < maxAllowedEnd)
+                {
+                    return BadRequest(new { message = "Время окончания не может быть раньше чем время начала + лимит времени" });
+                }
+            }
+
             var session = new QuestSession
             {
                 Id = Guid.NewGuid(),
